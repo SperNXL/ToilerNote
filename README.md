@@ -99,6 +99,32 @@ APK 输出路径：`app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
+## git推送
+
+**./.git/config**
+
+```
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	// github仓库
+	url = https://github.com/SperNXL/ToilerNote.git
+	// gitee 仓库
+	url = https://gitee.com/spernxl/ToilerNote.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+
+```
+
+
+
 ## 开发计划
 
 - [ ] 数据导出（Excel / CSV / JSON）
