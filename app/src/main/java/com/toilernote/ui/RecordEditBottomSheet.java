@@ -1,0 +1,250 @@
+package com.toilernote.ui;
+
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.toilernote.database.AppDatabase;
+import com.toilernote.databinding.BottomSheetRecordEditBinding;
+import com.toilernote.entity.DailyRecord;
+import com.toilernote.entity.UserPreference;
+import com.toilernote.utils.TimeUtils;
+import com.toilernote.utils.WorkHoursCalculator;
+
+import java.util.Calendar;
+import java.util.Locale;
+
+public class RecordEditBottomSheet extends BottomSheetDialogFragment {
+
+    private static final String ARG_DATE = "date";
+    private BottomSheetRecordEditBinding binding;
+    private String date;
+    private UserPreference preference;
+    private DailyRecord existingRecord;
+    private String currentStatus = "WORK";
+
+    public static RecordEditBottomSheet newInstance(String date) {
+        RecordEditBottomSheet sheet = new RecordEditBottomSheet();
+        Bundle args = new Bundle();
+        args.putString(ARG_DATE, date);
+        sheet.setArguments(args);
+        return sheet;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        binding = BottomSheetRecordEditBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        date = getArguments() != null ? getArguments().getString(ARG_DATE) : "";
+
+        // Load title
+        Calendar cal = Calendar.getInstance();
+        try {
+            String[] parts = date.split("-");
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            cal.set(Integer.parseInt(parts[0]), month - 1, day);
+        } catch (Exception ignored) {
+        }
+        String[] weekdays = {"日", "一", "二", "三", "四", "五", "六"};
+        String title = String.format(Locale.getDefault(), "%d月%d日 周%s",
+                cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH),
+                weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]);
+        binding.tvSheetTitle.setText(title);
+
+        binding.btnCloseSheet.setOnClickListener(v -> dismiss());
+
+        // Load preference and record
+        loadData();
+
+        // Status tabs
+        binding.tabWork.setOnClickListener(v -> setStatus("WORK"));
+        binding.tabRest.setOnClickListener(v -> setStatus("REST"));
+        binding.tabLeave.setOnClickListener(v -> setStatus("LEAVE"));
+
+        // Full day overtime switch
+        binding.switchFullDayOvertime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            binding.tilNightBreak.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+        });
+
+        // Quick buttons
+        binding.chipLate5.setOnClickListener(v -> addTime(binding.etActualStart, 5));
+        binding.chipLate10.setOnClickListener(v -> addTime(binding.etActualStart, 10));
+        binding.chipLate30.setOnClickListener(v -> addTime(binding.etActualStart, 30));
+        binding.chipOt1.setOnClickListener(v -> addTime(binding.etActualEnd, 60));
+        binding.chipOt2.setOnClickListener(v -> addTime(binding.etActualEnd, 120));
+        binding.chipOt3.setOnClickListener(v -> addTime(binding.etActualEnd, 180));
+
+        // Actions
+        binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
+        binding.btnSave.setOnClickListener(v -> save(false));
+        binding.btnSaveAndContinue.setOnClickListener(v -> save(true));
+    }
+
+    private void loadData() {
+        new Thread(() -> {
+            preference = AppDatabase.getInstance(requireContext()).userPreferenceDao().getPreference();
+            if (preference == null) {
+                preference = new UserPreference();
+            }
+            existingRecord = AppDatabase.getInstance(requireContext()).dailyRecordDao().getRecordByDate(date);
+
+            requireActivity().runOnUiThread(() -> {
+                if (existingRecord != null) {
+                    bindRecord(existingRecord);
+                } else {
+                    bindDefaults();
+                }
+            });
+        }).start();
+    }
+
+    private void bindDefaults() {
+        if (preference == null) return;
+        binding.etPlannedStart.setText(preference.getDefaultWorkStart());
+        binding.etPlannedEnd.setText(preference.getDefaultWorkEnd());
+        binding.etActualStart.setText(preference.getDefaultWorkStart());
+        binding.etActualEnd.setText(preference.getDefaultWorkEnd());
+        binding.etMidBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultMidBreak())));
+        binding.etNightBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultNightBreak())));
+        binding.switchFullDayOvertime.setChecked(false);
+        binding.etRemark.setText("");
+        setStatus("WORK");
+    }
+
+    private void bindRecord(DailyRecord record) {
+        binding.etPlannedStart.setText(record.getPlannedStart() != null ? record.getPlannedStart() : preference.getDefaultWorkStart());
+        binding.etPlannedEnd.setText(record.getPlannedEnd() != null ? record.getPlannedEnd() : preference.getDefaultWorkEnd());
+        binding.etActualStart.setText(record.getActualStart() != null ? record.getActualStart() : preference.getDefaultWorkStart());
+        binding.etActualEnd.setText(record.getActualEnd() != null ? record.getActualEnd() : preference.getDefaultWorkEnd());
+        binding.etMidBreak.setText(String.valueOf(record.getMidBreakMinutes()));
+        binding.etNightBreak.setText(String.valueOf(record.getNightBreakMinutes()));
+        binding.switchFullDayOvertime.setChecked(record.isFullDayOvertime());
+        binding.etRemark.setText(record.getRemark() != null ? record.getRemark() : "");
+        if (record.getLeaveStart() != null) binding.etLeaveStart.setText(record.getLeaveStart());
+        if (record.getLeaveEnd() != null) binding.etLeaveEnd.setText(record.getLeaveEnd());
+        setStatus(record.getStatus());
+    }
+
+    private void setStatus(String status) {
+        currentStatus = status;
+        binding.tabWork.setStrokeColor(ColorStateList.valueOf(Color.parseColor("WORK".equals(status) ? "#6366F1" : "#E2E8F0")));
+        binding.tabRest.setStrokeColor(ColorStateList.valueOf(Color.parseColor("REST".equals(status) ? "#6366F1" : "#E2E8F0")));
+        binding.tabLeave.setStrokeColor(ColorStateList.valueOf(Color.parseColor("LEAVE".equals(status) ? "#6366F1" : "#E2E8F0")));
+
+        binding.tabWork.setBackgroundColor(Color.parseColor("WORK".equals(status) ? "#EEF2FF" : "#FFFFFF"));
+        binding.tabRest.setBackgroundColor(Color.parseColor("REST".equals(status) ? "#EEF2FF" : "#FFFFFF"));
+        binding.tabLeave.setBackgroundColor(Color.parseColor("LEAVE".equals(status) ? "#EEF2FF" : "#FFFFFF"));
+
+        if ("REST".equals(status)) {
+            binding.workFormContainer.setVisibility(View.GONE);
+        } else {
+            binding.workFormContainer.setVisibility(View.VISIBLE);
+            binding.leaveTimeContainer.setVisibility("LEAVE".equals(status) ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void addTime(android.widget.EditText editText, int minutes) {
+        String text = editText.getText().toString();
+        int total = TimeUtils.timeToMinutes(text) + minutes;
+        editText.setText(TimeUtils.minutesToTime(total));
+    }
+
+    private void copyYesterday() {
+        String yesterday = TimeUtils.getYesterday(date);
+        if (yesterday == null) return;
+        new Thread(() -> {
+            DailyRecord yesterdayRecord = AppDatabase.getInstance(requireContext()).dailyRecordDao().getRecordByDate(yesterday);
+            requireActivity().runOnUiThread(() -> {
+                if (yesterdayRecord != null) {
+                    binding.etActualStart.setText(yesterdayRecord.getActualStart());
+                    binding.etActualEnd.setText(yesterdayRecord.getActualEnd());
+                    binding.etMidBreak.setText(String.valueOf(yesterdayRecord.getMidBreakMinutes()));
+                    binding.etNightBreak.setText(String.valueOf(yesterdayRecord.getNightBreakMinutes()));
+                    binding.switchFullDayOvertime.setChecked(yesterdayRecord.isFullDayOvertime());
+                    binding.etRemark.setText("");
+                    setStatus(yesterdayRecord.getStatus());
+                }
+            });
+        }).start();
+    }
+
+    private void save(boolean andContinue) {
+        DailyRecord record = existingRecord != null ? existingRecord : new DailyRecord(date, currentStatus);
+        record.setDate(date);
+        record.setStatus(currentStatus);
+        record.setPlannedStart(binding.etPlannedStart.getText().toString());
+        record.setPlannedEnd(binding.etPlannedEnd.getText().toString());
+        record.setActualStart(binding.etActualStart.getText().toString());
+        record.setActualEnd(binding.etActualEnd.getText().toString());
+        record.setMidBreakMinutes(parseInt(binding.etMidBreak.getText().toString()));
+        record.setNightBreakMinutes(parseInt(binding.etNightBreak.getText().toString()));
+        record.setFullDayOvertime(binding.switchFullDayOvertime.isChecked());
+        record.setRemark(binding.etRemark.getText().toString());
+
+        if ("LEAVE".equals(currentStatus)) {
+            record.setLeaveStart(binding.etLeaveStart.getText().toString());
+            record.setLeaveEnd(binding.etLeaveEnd.getText().toString());
+        } else {
+            record.setLeaveStart(null);
+            record.setLeaveEnd(null);
+        }
+
+        if (preference != null && !"REST".equals(currentStatus)) {
+            WorkHoursCalculator.calculate(record, preference);
+        }
+
+        new Thread(() -> {
+            AppDatabase.getInstance(requireContext()).dailyRecordDao().insert(record);
+            requireActivity().runOnUiThread(() -> {
+                if (andContinue) {
+                    moveToNextDay();
+                } else {
+                    dismiss();
+                }
+            });
+        }).start();
+    }
+
+    private void moveToNextDay() {
+        try {
+            String[] parts = date.split("-");
+            Calendar cal = Calendar.getInstance();
+            cal.set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) - 1, Integer.parseInt(parts[2]));
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            date = String.format(Locale.getDefault(), "%d-%02d-%02d",
+                    cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            existingRecord = null;
+            loadData();
+        } catch (Exception e) {
+            dismiss();
+        }
+    }
+
+    private int parseInt(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+}

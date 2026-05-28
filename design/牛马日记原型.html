@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>牛马日记 - 原型</title>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-light: #EEF2FF;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #1E293B;
+            --text-secondary: #64748B;
+            --text-tertiary: #94A3B8;
+            --border: #E2E8F0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --radius-xs: 8px;
+            --color-work: #6366F1;
+            --color-rest: #10B981;
+            --color-leave: #F59E0B;
+            --color-late: #EF4444;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--bg);
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            padding: 16px 20px 8px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+        }
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Page Content */
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+            scrollbar-width: none;
+        }
+        .page-content::-webkit-scrollbar { display: none; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Calendar */
+        .calendar-card {
+            background: var(--surface);
+            margin: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-month {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+        .calendar-nav button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .weekdays div {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            padding: 4px;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            padding: 4px;
+        }
+        .day-cell:hover { background: var(--primary-light); }
+        .day-cell.today { background: var(--primary-light); }
+        .day-cell.today .day-num { color: var(--primary); font-weight: 700; }
+        .day-cell .day-num {
+            font-size: 15px;
+            font-weight: 600;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .day-cell .day-info {
+            font-size: 9px;
+            color: var(--text-tertiary);
+            margin-top: 1px;
+            white-space: nowrap;
+        }
+        .day-cell.work .day-num { background: var(--color-work); color: white; }
+        .day-cell.rest .day-num { background: var(--color-rest); color: white; }
+        .day-cell.leave .day-num { background: var(--color-leave); color: white; }
+        .day-cell.late { border: 2px solid var(--color-late); }
+        .day-cell.late .day-num { background: var(--color-work); color: white; }
+        .day-cell.other-month { opacity: 0.3; }
+        .day-cell .late-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            background: var(--color-late);
+            border-radius: 50%;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            background: var(--surface);
+            margin: 0 16px 12px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+        .stats-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .stat-item {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .stat-value.primary { color: var(--primary); }
+        .stat-value.danger { color: var(--color-late); }
+
+        /* Bottom Sheet */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .overlay.active { opacity: 1; visibility: visible; }
+        .bottom-sheet {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            background: var(--surface);
+            border-radius: var(--radius) var(--radius) 0 0;
+            z-index: 101;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            max-height: 85vh;
+            overflow-y: auto;
+            padding-bottom: calc(24px + var(--safe-bottom));
+        }
+        .bottom-sheet.active { transform: translateY(0); }
+        .sheet-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 2;
+        }
+        .sheet-title { font-size: 17px; font-weight: 700; }
+        .sheet-close {
+            width: 32px; height: 32px;
+            border: none; background: var(--bg);
+            border-radius: 50%;
+            font-size: 18px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .sheet-body { padding: 16px 20px; }
+        .sheet-drag { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 8px auto; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 15px;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .status-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .status-tab {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--surface);
+            transition: all 0.2s;
+        }
+        .status-tab.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .switch-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .switch-label { font-size: 15px; font-weight: 500; }
+        .switch {
+            width: 48px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 24px; height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .switch.on { background: var(--primary); }
+        .switch.on::after { transform: translateX(20px); }
+        .quick-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+        .quick-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            background: var(--bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .quick-btn:active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .sheet-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-xs);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+        .btn:active { opacity: 0.8; }
+
+        /* Stats Page */
+        .chart-card {
+            background: var(--surface);
+            margin: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+        .chart-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 140px;
+            padding-top: 20px;
+        }
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .bar-stack {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+        }
+        .bar {
+            width: 100%;
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+        }
+        .bar-work { background: var(--color-work); opacity: 0.8; }
+        .bar-overtime { background: var(--color-work); }
+        .bar-late { border: 2px solid var(--color-late); border-bottom: none; }
+        .bar-label {
+            font-size: 9px;
+            color: var(--text-tertiary);
+        }
+        .line-chart {
+            height: 120px;
+            position: relative;
+            margin-top: 10px;
+        }
+        .line-chart svg { width: 100%; height: 100%; }
+        .insight-card {
+            background: linear-gradient(135deg, var(--primary-light), #F0F9FF);
+            margin: 12px 16px;
+            border-radius: var(--radius);
+            padding: 16px;
+            border-left: 4px solid var(--primary);
+        }
+        .insight-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .insight-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Settings Page */
+        .settings-group {
+            background: var(--surface);
+            margin: 12px 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .settings-header {
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg);
+        }
+        .settings-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        .settings-icon.blue { background: #EEF2FF; }
+        .settings-icon.green { background: #ECFDF5; }
+        .settings-icon.yellow { background: #FFFBEB; }
+        .settings-icon.red { background: #FEF2F2; }
+        .settings-icon.purple { background: #F5F3FF; }
+        .settings-info { flex: 1; }
+        .settings-label { font-size: 15px; font-weight: 500; }
+        .settings-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+        .settings-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 calc(8px + var(--safe-bottom));
+            z-index: 50;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-tertiary);
+            transition: color 0.2s;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 22px; }
+        .nav-label { font-size: 11px; font-weight: 600; }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page.active { animation: fadeIn 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title" id="pageTitle">考勤</div>
+            <div class="header-sub" id="pageSub">2026年5月</div>
+        </div>
+
+        <!-- Page: Attendance -->
+        <div class="page-content">
+            <div class="page active" id="page-attendance">
+                <!-- Calendar -->
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <div class="calendar-month" id="calendarMonth">2026年5月</div>
+                        <div class="calendar-nav">
+                            <button onclick="changeMonth(-1)">‹</button>
+                            <button onclick="changeMonth(1)">›</button>
+                        </div>
+                    </div>
+                    <div class="weekdays">
+                        <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                    </div>
+                    <div class="days-grid" id="daysGrid"></div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-card">
+                    <div class="stats-title">
+                        <span>本月汇总</span>
+                        <span style="font-size:12px;color:var(--text-tertiary);">左右滑动切换月份 ›</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">上班天数</div>
+                            <div class="stat-value primary">18</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">工时合计</div>
+                            <div class="stat-value">142.5h</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">加班时长</div>
+                            <div class="stat-value primary">24h</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">请假天数</div>
+                            <div class="stat-value">2</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">迟到次数</div>
+                            <div class="stat-value danger">3</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">预估月薪</div>
+                            <div class="stat-value primary">¥8,640</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page: Statistics -->
+            <div class="page" id="page-statistics">
+                <div class="chart-card">
+                    <div class="chart-title">5月每日工时分布</div>
+                    <div class="bar-chart" id="barChart"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">累计趋势</div>
+                    <div class="line-chart">
+                        <svg viewBox="0 0 300 120" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#6366F1" stop-opacity="0.3"/>
+                                    <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M0,100 L30,95 L60,85 L90,80 L120,70 L150,65 L180,55 L210,50 L240,40 L270,35 L300,30" 
+                                  fill="none" stroke="#6366F1" stroke-width="2"/>
+                            <path d="M0,100 L30,95 L60,85 L90,80 L120,70 L150,65 L180,55 L210,50 L240,40 L270,35 L300,30 L300,120 L0,120 Z" 
+                                  fill="url(#grad1)"/>
+                            <path d="M0,110 L30,108 L60,105 L90,102 L120,98 L150,95 L180,90 L210,85 L240,80 L270,75 L300,70" 
+                                  fill="none" stroke="#10B981" stroke-width="2" stroke-dasharray="4,4"/>
+                        </svg>
+                    </div>
+                    <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--text-secondary);">
+                        <span><span style="display:inline-block;width:12px;height:3px;background:var(--primary);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>累计工时</span>
+                        <span><span style="display:inline-block;width:12px;height:3px;background:var(--color-rest);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>累计加班</span>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">⚠️ 工作强度预警</div>
+                    <div class="insight-text">本周已连续上班 6 天，建议适当休息。本月加班占比达 16.8%，高于上月 12%。</div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">周期对比（4月 vs 5月）</div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px;">
+                        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:var(--radius-xs);">
+                            <div style="font-size:11px;color:var(--text-secondary);">工时</div>
+                            <div style="font-size:18px;font-weight:700;margin:4px 0;">+8%</div>
+                            <div style="font-size:11px;color:var(--text-tertiary);">135h → 142.5h</div>
+                        </div>
+                        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:var(--radius-xs);">
+                            <div style="font-size:11px;color:var(--text-secondary);">加班</div>
+                            <div style="font-size:18px;font-weight:700;margin:4px 0;color:var(--color-late);">+50%</div>
+                            <div style="font-size:11px;color:var(--text-tertiary);">16h → 24h</div>
+                        </div>
+                        <div style="text-align:center;padding:12px;background:var(--bg);border-radius:var(--radius-xs);">
+                            <div style="font-size:11px;color:var(--text-secondary);">迟到</div>
+                            <div style="font-size:18px;font-weight:700;margin:4px 0;">持平</div>
+                            <div style="font-size:11px;color:var(--text-tertiary);">3 次</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin:12px 16px 24px;">
+                    <button class="btn btn-primary" style="width:100%;">📤 导出本月数据</button>
+                </div>
+            </div>
+
+            <!-- Page: Settings -->
+            <div class="page" id="page-settings">
+                <div class="settings-group">
+                    <div class="settings-item">
+                        <div class="avatar">🐮</div>
+                        <div class="settings-info">
+                            <div class="settings-label">牛马一号</div>
+                            <div class="settings-desc">点击修改头像与昵称</div>
+                        </div>
+                        <div class="settings-value">›</div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-header">默认时间</div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">🕘</div>
+                        <div class="settings-info">
+                            <div class="settings-label">默认上班时间</div>
+                        </div>
+                        <div class="settings-value">09:00 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">🕕</div>
+                        <div class="settings-info">
+                            <div class="settings-label">默认下班时间</div>
+                        </div>
+                        <div class="settings-value">18:00 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">☕</div>
+                        <div class="settings-info">
+                            <div class="settings-label">中间休息时间</div>
+                        </div>
+                        <div class="settings-value">12:00-14:00 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">🌙</div>
+                        <div class="settings-info">
+                            <div class="settings-label">晚上休息时间</div>
+                        </div>
+                        <div class="settings-value">18:00-19:00 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon purple">📅</div>
+                        <div class="settings-info">
+                            <div class="settings-label">默认工作日</div>
+                        </div>
+                        <div class="settings-value">周一至周五 ›</div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-header">日历颜色</div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">💼</div>
+                        <div class="settings-info">
+                            <div class="settings-label">上班标注颜色</div>
+                        </div>
+                        <div class="settings-value">
+                            <div class="color-dot" style="background:#6366F1;"></div>
+                            ›
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon green">🏖️</div>
+                        <div class="settings-info">
+                            <div class="settings-label">休息标注颜色</div>
+                        </div>
+                        <div class="settings-value">
+                            <div class="color-dot" style="background:#10B981;"></div>
+                            ›
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon yellow">🏥</div>
+                        <div class="settings-info">
+                            <div class="settings-label">请假标注颜色</div>
+                        </div>
+                        <div class="settings-value">
+                            <div class="color-dot" style="background:#F59E0B;"></div>
+                            ›
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon red">⏰</div>
+                        <div class="settings-info">
+                            <div class="settings-label">迟到标注颜色</div>
+                        </div>
+                        <div class="settings-value">
+                            <div class="color-dot" style="background:#EF4444;"></div>
+                            ›
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-header">数据与薪资</div>
+                    <div class="settings-item">
+                        <div class="settings-icon purple">💰</div>
+                        <div class="settings-info">
+                            <div class="settings-label">时薪设置</div>
+                            <div class="settings-desc">用于预估月薪计算</div>
+                        </div>
+                        <div class="settings-value">¥50/时 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon purple">⚡</div>
+                        <div class="settings-info">
+                            <div class="settings-label">加班倍数</div>
+                        </div>
+                        <div class="settings-value">1.5 倍 ›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon blue">💾</div>
+                        <div class="settings-info">
+                            <div class="settings-label">导入 / 导出 JSON</div>
+                            <div class="settings-desc">完整备份与恢复</div>
+                        </div>
+                        <div class="settings-value">›</div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-icon red">🗑️</div>
+                        <div class="settings-info">
+                            <div class="settings-label">清空当月数据</div>
+                        </div>
+                        <div class="settings-value">›</div>
+                    </div>
+                </div>
+
+                <div style="margin:12px 16px 24px;">
+                    <button class="btn btn-secondary" style="width:100%;">🌙 深色模式</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Sheet -->
+        <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+        <div class="bottom-sheet" id="bottomSheet">
+            <div class="sheet-drag"></div>
+            <div class="sheet-header">
+                <div class="sheet-title" id="sheetTitle">5月28日 周三</div>
+                <button class="sheet-close" onclick="closeSheet()">×</button>
+            </div>
+            <div class="sheet-body">
+                <div class="status-tabs">
+                    <div class="status-tab active" onclick="setStatus(this, 'work')">💼 上班</div>
+                    <div class="status-tab" onclick="setStatus(this, 'rest')">🏖️ 休息</div>
+                    <div class="status-tab" onclick="setStatus(this, 'leave')">🏥 请假</div>
+                </div>
+
+                <div id="workForm">
+                    <div class="switch-row">
+                        <span class="switch-label">全天加班</span>
+                        <div class="switch" id="fullDaySwitch" onclick="toggleSwitch(this)"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">计划上班</label>
+                            <input class="form-input" type="time" value="09:00" disabled style="opacity:0.6;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">实际上班</label>
+                            <input class="form-input" type="time" value="09:00" id="actualStart">
+                            <div class="quick-btns">
+                                <button class="quick-btn" onclick="addTime('actualStart', 5)">+5分</button>
+                                <button class="quick-btn" onclick="addTime('actualStart', 10)">+10分</button>
+                                <button class="quick-btn" onclick="addTime('actualStart', 30)">+30分</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">计划下班</label>
+                            <input class="form-input" type="time" value="18:00" disabled style="opacity:0.6;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">实际下班</label>
+                            <input class="form-input" type="time" value="18:00" id="actualEnd">
+                            <div class="quick-btns">
+                                <button class="quick-btn" onclick="addTime('actualEnd', 60)">+1h</button>
+                                <button class="quick-btn" onclick="addTime('actualEnd', 120)">+2h</button>
+                                <button class="quick-btn" onclick="addTime('actualEnd', 180)">+3h</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">中间休息 (分)</label>
+                            <input class="form-input" type="number" value="120">
+                        </div>
+                        <div class="form-group" id="nightBreakGroup">
+                            <label class="form-label">晚上休息 (分)</label>
+                            <input class="form-input" type="number" value="60">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="leaveGroup" style="display:none;">
+                        <label class="form-label">请假时间段</label>
+                        <div class="form-row">
+                            <input class="form-input" type="time" value="14:00">
+                            <input class="form-input" type="time" value="16:00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input class="form-input" type="text" placeholder="可选：填写当日备注...">
+                    </div>
+                </div>
+
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet()">复制昨日</button>
+                    <button class="btn btn-secondary" onclick="closeSheet()">保存并继续</button>
+                    <button class="btn btn-primary" onclick="closeSheet()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('attendance', this)">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">考勤</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('statistics', this)">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">统计</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('settings', this)">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">设置</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date(2026, 4, 1);
+        let selectedDate = null;
+
+        const demoData = {
+            '2026-05-06': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-07': { status: 'work', work: 8, overtime: 2, late: false },
+            '2026-05-08': { status: 'work', work: 8, overtime: 0, late: true },
+            '2026-05-09': { status: 'rest' },
+            '2026-05-10': { status: 'rest' },
+            '2026-05-11': { status: 'work', work: 8, overtime: 1.5, late: false },
+            '2026-05-12': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-13': { status: 'work', work: 8, overtime: 3, late: true },
+            '2026-05-14': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-15': { status: 'work', work: 8, overtime: 2, late: false },
+            '2026-05-16': { status: 'rest' },
+            '2026-05-17': { status: 'rest' },
+            '2026-05-18': { status: 'work', work: 8, overtime: 0, late: true },
+            '2026-05-19': { status: 'work', work: 8, overtime: 1, late: false },
+            '2026-05-20': { status: 'leave' },
+            '2026-05-21': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-22': { status: 'work', work: 8, overtime: 2.5, late: false },
+            '2026-05-23': { status: 'rest' },
+            '2026-05-24': { status: 'rest' },
+            '2026-05-25': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-26': { status: 'work', work: 8, overtime: 1, late: false },
+            '2026-05-27': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-28': { status: 'work', work: 8, overtime: 0, late: false },
+            '2026-05-29': { status: 'rest' },
+            '2026-05-30': { status: 'rest' },
+        };
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            document.getElementById('calendarMonth').textContent = `${year}年${month + 1}月`;
+            document.getElementById('pageSub').textContent = `${year}年${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startPadding = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+
+            // Previous month padding
+            for (let i = startPadding - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                const cell = createDayCell(day, true);
+                grid.appendChild(cell);
+            }
+
+            // Current month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const data = demoData[dateStr];
+                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                const cell = createDayCell(day, false, data, isToday, dateStr);
+                grid.appendChild(cell);
+            }
+
+            // Next month padding
+            const totalCells = startPadding + daysInMonth;
+            const remaining = 7 - (totalCells % 7);
+            if (remaining < 7) {
+                for (let day = 1; day <= remaining; day++) {
+                    const cell = createDayCell(day, true);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function createDayCell(day, isOtherMonth, data, isToday, dateStr) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (isOtherMonth) cell.classList.add('other-month');
+            if (isToday) cell.classList.add('today');
+
+            if (data) {
+                cell.classList.add(data.status);
+                if (data.late) cell.classList.add('late');
+            }
+
+            let html = `<div class="day-num">${day}</div>`;
+            if (data && data.status === 'work') {
+                html += `<div class="day-info">${data.work}h+${data.overtime}h</div>`;
+                if (data.late) html += `<div class="late-badge"></div>`;
+            } else if (data && data.status === 'leave') {
+                html += `<div class="day-info">假</div>`;
+            } else if (data && data.status === 'rest') {
+                html += `<div class="day-info">休</div>`;
+            }
+
+            cell.innerHTML = html;
+            if (!isOtherMonth && dateStr) {
+                cell.onclick = () => openSheet(dateStr, day);
+            }
+            return cell;
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function openSheet(dateStr, day) {
+            selectedDate = dateStr;
+            const date = new Date(dateStr);
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            document.getElementById('sheetTitle').textContent = 
+                `5月${day}日 周${weekdays[date.getDay()]}`;
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('bottomSheet').classList.add('active');
+        }
+
+        function closeSheet() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('bottomSheet').classList.remove('active');
+        }
+
+        function setStatus(el, status) {
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            const workForm = document.getElementById('workForm');
+            const leaveGroup = document.getElementById('leaveGroup');
+            if (status === 'rest') {
+                workForm.style.display = 'none';
+            } else if (status === 'leave') {
+                workForm.style.display = 'block';
+                leaveGroup.style.display = 'block';
+            } else {
+                workForm.style.display = 'block';
+                leaveGroup.style.display = 'none';
+            }
+        }
+
+        function toggleSwitch(el) {
+            el.classList.toggle('on');
+            const nightBreak = document.getElementById('nightBreakGroup');
+            if (el.classList.contains('on')) {
+                nightBreak.style.display = 'none';
+            } else {
+                nightBreak.style.display = 'block';
+            }
+        }
+
+        function addTime(inputId, minutes) {
+            const input = document.getElementById(inputId);
+            const [h, m] = input.value.split(':').map(Number);
+            const total = h * 60 + m + minutes;
+            const newH = Math.floor(total / 60) % 24;
+            const newM = total % 60;
+            input.value = `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+        }
+
+        function switchTab(page, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            btn.classList.add('active');
+
+            const titles = {
+                attendance: ['考勤', `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`],
+                statistics: ['统计', '数据洞察与趋势分析'],
+                settings: ['设置', '偏好与数据管理']
+            };
+            document.getElementById('pageTitle').textContent = titles[page][0];
+            document.getElementById('pageSub').textContent = titles[page][1];
+        }
+
+        function renderBarChart() {
+            const chart = document.getElementById('barChart');
+            const days = [6, 7, 8, 11, 12, 13, 14, 15, 18, 19, 21, 22, 25, 26, 27, 28];
+            const maxVal = 12;
+            days.forEach(day => {
+                const dateStr = `2026-05-${String(day).padStart(2, '0')}`;
+                const data = demoData[dateStr];
+                if (!data || data.status !== 'work') return;
+
+                const workH = data.work;
+                const otH = data.overtime;
+                const workPct = (workH / maxVal) * 100;
+                const otPct = (otH / maxVal) * 100;
+
+                const group = document.createElement('div');
+                group.className = 'bar-group';
+                group.innerHTML = `
+                    <div class="bar-stack" style="height:100%;justify-content:flex-end;">
+                        <div class="bar bar-work" style="height:${workPct}%"></div>
+                        <div class="bar bar-overtime" style="height:${otPct}%"></div>
+                    </div>
+                    <div class="bar-label">${day}</div>
+                `;
+                chart.appendChild(group);
+            });
+        }
+
+        renderCalendar();
+        renderBarChart();
+    </script>
+</body>
+</html>

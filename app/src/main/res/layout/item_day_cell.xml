@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="2dp">
+
+    <LinearLayout
+        android:id="@+id/dayContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/tvDayNum"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="28" />
+
+        <TextView
+            android:id="@+id/tvDayInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/text_tertiary"
+            android:textSize="9sp"
+            tools:text="8h+2h" />
+    </LinearLayout>
+
+    <!-- Late badge -->
+    <View
+        android:id="@+id/lateBadge"
+        android:layout_width="6dp"
+        android:layout_height="6dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="2dp"
+        android:background="@drawable/bg_circle_red"
+        android:visibility="gone" />
+
+</FrameLayout>

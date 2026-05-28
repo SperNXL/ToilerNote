@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ToilerNote" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#818CF8</item>
+        <item name="colorPrimaryContainer">#312E81</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">#818CF8</item>
+        <item name="android:statusBarColor">#1E293B</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#1E293B</item>
+    </style>
+</resources>
