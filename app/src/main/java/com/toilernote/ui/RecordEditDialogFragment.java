@@ -1,47 +1,59 @@
 package com.toilernote.ui;
 
+import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.toilernote.R;
 import com.toilernote.database.AppDatabase;
-import com.toilernote.databinding.BottomSheetRecordEditBinding;
+import com.toilernote.databinding.DialogRecordEditBinding;
 import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.utils.TimeUtils;
 import com.toilernote.utils.WorkHoursCalculator;
+import com.toilernote.viewmodel.CalendarViewModel;
 
 import java.util.Calendar;
 import java.util.Locale;
 
-public class RecordEditBottomSheet extends BottomSheetDialogFragment {
+public class RecordEditDialogFragment extends DialogFragment {
 
     private static final String ARG_DATE = "date";
-    private BottomSheetRecordEditBinding binding;
+    private DialogRecordEditBinding binding;
     private String date;
     private UserPreference preference;
     private DailyRecord existingRecord;
     private String currentStatus = "WORK";
 
-    public static RecordEditBottomSheet newInstance(String date) {
-        RecordEditBottomSheet sheet = new RecordEditBottomSheet();
+    public static RecordEditDialogFragment newInstance(String date) {
+        RecordEditDialogFragment fragment = new RecordEditDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARG_DATE, date);
-        sheet.setArguments(args);
-        return sheet;
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NORMAL, R.style.ThemeOverlay_ToilerNote_FullScreenDialog);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = BottomSheetRecordEditBinding.inflate(inflater, container, false);
+        binding = DialogRecordEditBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -92,6 +104,20 @@ public class RecordEditBottomSheet extends BottomSheetDialogFragment {
         binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
         binding.btnSave.setOnClickListener(v -> save(false));
         binding.btnSaveAndContinue.setOnClickListener(v -> save(true));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Dialog dialog = getDialog();
+        if (dialog != null) {
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                window.setWindowAnimations(R.style.DialogAnimation);
+            }
+        }
     }
 
     private void loadData() {
