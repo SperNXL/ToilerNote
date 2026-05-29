@@ -160,8 +160,8 @@ public class AttendanceFragment extends Fragment {
     }
 
     private void openEditSheet(String date) {
-        RecordEditBottomSheet sheet = RecordEditBottomSheet.newInstance(date);
-        sheet.show(getParentFragmentManager(), "edit_record");
+        RecordEditDialogFragment dialog = RecordEditDialogFragment.newInstance(date);
+        dialog.show(getParentFragmentManager(), "edit_record");
     }
 
     @Override
