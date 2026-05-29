@@ -155,7 +155,8 @@
                             android:id="@+id/etPlannedStart"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:enabled="false"
+                            android:focusable="false"
+                            android:clickable="true"
                             android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -172,7 +173,9 @@
                             android:id="@+id/etActualStart"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="time"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -232,7 +235,8 @@
                             android:id="@+id/etPlannedEnd"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:enabled="false"
+                            android:focusable="false"
+                            android:clickable="true"
                             android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -249,7 +253,9 @@
                             android:id="@+id/etActualEnd"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="time"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -354,7 +360,9 @@
                             android:id="@+id/etLeaveStart"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="time"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -370,7 +378,9 @@
                             android:id="@+id/etLeaveEnd"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="time"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:inputType="none"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>

@@ -15,6 +15,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 import com.toilernote.R;
 import com.toilernote.database.AppDatabase;
 import com.toilernote.databinding.DialogRecordEditBinding;
@@ -99,6 +101,14 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.chipOt1.setOnClickListener(v -> addTime(binding.etActualEnd, 60));
         binding.chipOt2.setOnClickListener(v -> addTime(binding.etActualEnd, 120));
         binding.chipOt3.setOnClickListener(v -> addTime(binding.etActualEnd, 180));
+
+        // Time pickers
+        binding.etPlannedStart.setOnClickListener(v -> showTimePicker(binding.etPlannedStart, "计划上班时间"));
+        binding.etActualStart.setOnClickListener(v -> showTimePicker(binding.etActualStart, "实际上班时间"));
+        binding.etPlannedEnd.setOnClickListener(v -> showTimePicker(binding.etPlannedEnd, "计划下班时间"));
+        binding.etActualEnd.setOnClickListener(v -> showTimePicker(binding.etActualEnd, "实际下班时间"));
+        binding.etLeaveStart.setOnClickListener(v -> showTimePicker(binding.etLeaveStart, "请假开始时间"));
+        binding.etLeaveEnd.setOnClickListener(v -> showTimePicker(binding.etLeaveEnd, "请假结束时间"));
 
         // Actions
         binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
@@ -187,6 +197,35 @@ public class RecordEditDialogFragment extends DialogFragment {
         String text = editText.getText().toString();
         int total = TimeUtils.timeToMinutes(text) + minutes;
         editText.setText(TimeUtils.minutesToTime(total));
+    }
+
+    private void showTimePicker(android.widget.EditText editText, String title) {
+        int hour = 9;
+        int minute = 0;
+        String text = editText.getText().toString();
+        if (text != null && !text.isEmpty()) {
+            String[] parts = text.split(":");
+            if (parts.length == 2) {
+                try {
+                    hour = Integer.parseInt(parts[0]);
+                    minute = Integer.parseInt(parts[1]);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        MaterialTimePicker picker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setHour(hour)
+                .setMinute(minute)
+                .setTitleText(title)
+                .build();
+
+        picker.show(getParentFragmentManager(), "time_picker");
+        picker.addOnPositiveButtonClickListener(v -> {
+            String time = String.format(Locale.getDefault(), "%02d:%02d", picker.getHour(), picker.getMinute());
+            editText.setText(time);
+        });
     }
 
     private void copyYesterday() {
