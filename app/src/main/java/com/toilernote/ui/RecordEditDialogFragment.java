@@ -94,6 +94,11 @@ public class RecordEditDialogFragment extends DialogFragment {
             binding.tilNightBreak.setVisibility(isChecked ? View.GONE : View.VISIBLE);
         });
 
+        // Full day leave switch
+        binding.switchFullDayLeave.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateLeaveFormVisibility();
+        });
+
         // Quick buttons
         binding.chipLate5.setOnClickListener(v -> addTime(binding.etActualStart, 5));
         binding.chipLate10.setOnClickListener(v -> addTime(binding.etActualStart, 10));
@@ -157,6 +162,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.etMidBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultMidBreak())));
         binding.etNightBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultNightBreak())));
         binding.switchFullDayOvertime.setChecked(false);
+        binding.switchFullDayLeave.setChecked(true);
         binding.etRemark.setText("");
         setStatus("WORK");
     }
@@ -169,6 +175,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.etMidBreak.setText(String.valueOf(record.getMidBreakMinutes()));
         binding.etNightBreak.setText(String.valueOf(record.getNightBreakMinutes()));
         binding.switchFullDayOvertime.setChecked(record.isFullDayOvertime());
+        binding.switchFullDayLeave.setChecked(record.isFullDayLeave());
         binding.etRemark.setText(record.getRemark() != null ? record.getRemark() : "");
         if (record.getLeaveStart() != null) binding.etLeaveStart.setText(record.getLeaveStart());
         if (record.getLeaveEnd() != null) binding.etLeaveEnd.setText(record.getLeaveEnd());
@@ -187,9 +194,24 @@ public class RecordEditDialogFragment extends DialogFragment {
 
         if ("REST".equals(status)) {
             binding.workFormContainer.setVisibility(View.GONE);
+            binding.fullDayLeaveContainer.setVisibility(View.GONE);
+        } else if ("LEAVE".equals(status)) {
+            binding.workFormContainer.setVisibility(View.VISIBLE);
+            binding.fullDayLeaveContainer.setVisibility(View.VISIBLE);
+            updateLeaveFormVisibility();
         } else {
             binding.workFormContainer.setVisibility(View.VISIBLE);
-            binding.leaveTimeContainer.setVisibility("LEAVE".equals(status) ? View.VISIBLE : View.GONE);
+            binding.fullDayLeaveContainer.setVisibility(View.GONE);
+            binding.leaveTimeContainer.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateLeaveFormVisibility() {
+        if (binding.switchFullDayLeave.isChecked()) {
+            binding.workFormContainer.setVisibility(View.GONE);
+        } else {
+            binding.workFormContainer.setVisibility(View.VISIBLE);
+            binding.leaveTimeContainer.setVisibility(View.VISIBLE);
         }
     }
 
@@ -258,6 +280,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         record.setMidBreakMinutes(parseInt(binding.etMidBreak.getText().toString()));
         record.setNightBreakMinutes(parseInt(binding.etNightBreak.getText().toString()));
         record.setFullDayOvertime(binding.switchFullDayOvertime.isChecked());
+        record.setFullDayLeave(binding.switchFullDayLeave.isChecked());
         record.setRemark(binding.etRemark.getText().toString());
 
         if ("LEAVE".equals(currentStatus)) {

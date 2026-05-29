@@ -91,11 +91,25 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                         holder.tvDayInfo.setText("休");
                         holder.tvDayInfo.setVisibility(View.VISIBLE);
                     } else if ("LEAVE".equals(status)) {
-                        holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
-                        holder.tvDayNum.getBackground().setTint(leaveColor);
-                        holder.tvDayNum.setTextColor(Color.WHITE);
-                        holder.tvDayInfo.setText("假");
-                        holder.tvDayInfo.setVisibility(View.VISIBLE);
+                        if (item.record.isFullDayLeave()) {
+                            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+                            holder.tvDayNum.getBackground().setTint(leaveColor);
+                            holder.tvDayNum.setTextColor(Color.WHITE);
+                            holder.tvDayInfo.setText("假");
+                            holder.tvDayInfo.setVisibility(View.VISIBLE);
+                        } else {
+                            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+                            holder.tvDayNum.getBackground().setTint(workColor);
+                            holder.tvDayNum.setTextColor(Color.WHITE);
+                            String info = String.format(java.util.Locale.getDefault(), "%.0fh+%.0fh",
+                                    item.record.getWorkHours(), item.record.getOvertimeHours());
+                            holder.tvDayInfo.setText(info);
+                            holder.tvDayInfo.setVisibility(View.VISIBLE);
+                            if (item.record.isLate()) {
+                                holder.lateBadge.setVisibility(View.VISIBLE);
+                                holder.lateBadge.getBackground().setTint(lateColor);
+                            }
+                        }
                     }
                 } else {
                     holder.tvDayNum.setBackground(null);

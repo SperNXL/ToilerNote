@@ -101,6 +101,30 @@
                     app:strokeColor="@color/primary" />
             </LinearLayout>
 
+            <!-- Full Day Leave Switch -->
+            <LinearLayout
+                android:id="@+id/fullDayLeaveContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingVertical="8dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/full_day_leave"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchFullDayLeave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
             <!-- Work Form -->
             <LinearLayout
                 android:id="@+id/workFormContainer"
