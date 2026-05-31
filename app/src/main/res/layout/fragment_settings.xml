@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="80dp">
+        android:paddingBottom="0dp">
 
         <!-- User Info (P1 placeholder) -->
         <androidx.cardview.widget.CardView
@@ -713,7 +713,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="50dp"
+            android:layout_marginTop="80dp"
             app:strokeWidth="0dp">
 
             <TextView
