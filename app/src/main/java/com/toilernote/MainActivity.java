@@ -1,6 +1,7 @@
 package com.toilernote;
 
 import android.os.Bundle;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
+    private ImageView catPanel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
+        ImageView catPanel = findViewById(R.id.cat_panel);
         binding.viewPager.setAdapter(adapter);
         binding.viewPager.setUserInputEnabled(false);
 
@@ -41,14 +45,12 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_attendance) {
                 binding.viewPager.setCurrentItem(0, false);
                 updateHeader(getString(R.string.attendance), getCurrentMonthText());
-                return true;
-            } else if (itemId == R.id.nav_statistics) {
-                binding.viewPager.setCurrentItem(1, false);
-                updateHeader(getString(R.string.statistics), getString(R.string.data_insight));
+                catPanel.setImageResource(R.drawable.cat_panel_2_2);
                 return true;
             } else if (itemId == R.id.nav_settings) {
                 binding.viewPager.setCurrentItem(2, false);
                 updateHeader(getString(R.string.settings), getString(R.string.preference_data));
+                catPanel.setImageResource(R.drawable.cat_panel_3_2);
                 return true;
             }
             // TODO: 2026/5/31 统计功能
