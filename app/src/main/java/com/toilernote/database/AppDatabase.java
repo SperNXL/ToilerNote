@@ -11,7 +11,7 @@ import com.toilernote.dao.UserPreferenceDao;
 import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 
-@Database(entities = {DailyRecord.class, UserPreference.class}, version = 2, exportSchema = false)
+@Database(entities = {DailyRecord.class, UserPreference.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;

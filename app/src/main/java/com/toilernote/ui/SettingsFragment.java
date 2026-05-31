@@ -1,36 +1,57 @@
 package com.toilernote.ui;
 
 import android.app.AlertDialog;
-import android.app.TimePickerDialog;
-import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
+import com.toilernote.R;
 import com.toilernote.databinding.FragmentSettingsBinding;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.viewmodel.SettingsViewModel;
 
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.function.Consumer;
 
 public class SettingsFragment extends Fragment {
 
     private FragmentSettingsBinding binding;
     private SettingsViewModel viewModel;
     private UserPreference preference;
+
+    private static final String[] COLOR_PRESETS = {
+            "#FFFFFF", "#F8FAFC", "#1E293B", "#3B82F6", "#60A5FA", "#FB7185", "#EF4444", "#FACC15"
+    };
+    private static final String DEFAULT_WORK_COLOR = "#6366F1";
+    private static final String DEFAULT_REST_COLOR = "#10B981";
+    private static final String DEFAULT_LEAVE_COLOR = "#F59E0B";
+    private static final String DEFAULT_LATE_COLOR = "#EF4444";
+
+    private final List<View> workColorViews = new ArrayList<>();
+    private final List<View> restColorViews = new ArrayList<>();
+    private final List<View> leaveColorViews = new ArrayList<>();
+    private final List<View> lateColorViews = new ArrayList<>();
 
     public SettingsFragment() {
     }
@@ -53,157 +74,157 @@ public class SettingsFragment extends Fragment {
                 bindSettings();
             }
         });
-
-        binding.btnDarkMode.setOnClickListener(v -> toggleDarkMode());
     }
 
     private void bindSettings() {
-        // Nickname
+        // Nickname (P1 placeholder)
         binding.tvNickname.setText(preference.getNickname());
-        binding.tvNickname.setOnClickListener(v -> showEditTextDialog("修改昵称", preference.getNickname(), text -> {
-            preference.setNickname(text);
-            viewModel.savePreference(preference);
-        }));
 
-        // Default times
-        bindSettingItem(binding.itemWorkStart.tvSettingIcon, binding.itemWorkStart.tvSettingLabel, binding.itemWorkStart.tvSettingValue,
-                "🕘", "默认上班时间", preference.getDefaultWorkStart());
-        binding.itemWorkStart.getRoot().setOnClickListener(v ->
-                showTimePicker("上班时间", preference.getDefaultWorkStart(), time -> {
+        // Work Start Time (always visible)
+        binding.etWorkStart.setText(preference.getDefaultWorkStart());
+        binding.etWorkStart.setOnClickListener(v ->
+                showMaterialTimePicker("上班时间", preference.getDefaultWorkStart(), time -> {
                     preference.setDefaultWorkStart(time);
+                    binding.etWorkStart.setText(time);
                     viewModel.savePreference(preference);
                 }));
 
-        bindSettingItem(binding.itemWorkEnd.tvSettingIcon, binding.itemWorkEnd.tvSettingLabel, binding.itemWorkEnd.tvSettingValue,
-                "🕕", "默认下班时间", preference.getDefaultWorkEnd());
-        binding.itemWorkEnd.getRoot().setOnClickListener(v ->
-                showTimePicker("下班时间", preference.getDefaultWorkEnd(), time -> {
+        // Work End Time (always visible)
+        binding.etWorkEnd.setText(preference.getDefaultWorkEnd());
+        binding.etWorkEnd.setOnClickListener(v ->
+                showMaterialTimePicker("下班时间", preference.getDefaultWorkEnd(), time -> {
                     preference.setDefaultWorkEnd(time);
+                    binding.etWorkEnd.setText(time);
                     viewModel.savePreference(preference);
                 }));
 
-        bindSettingItem(binding.itemMidBreak.tvSettingIcon, binding.itemMidBreak.tvSettingLabel, binding.itemMidBreak.tvSettingValue,
-                "☕", "中间休息时间", preference.getDefaultMidBreak());
-        binding.itemMidBreak.getRoot().setOnClickListener(v ->
-                showEditTextDialog("中间休息时间", preference.getDefaultMidBreak(), text -> {
-                    preference.setDefaultMidBreak(text);
+        // Mid Break Switch + expandable form
+        binding.switchMidBreak.setChecked(preference.isMidBreakEnabled());
+        binding.formMidBreak.setVisibility(preference.isMidBreakEnabled() ? View.VISIBLE : View.GONE);
+        binding.switchMidBreak.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            preference.setMidBreakEnabled(isChecked);
+            binding.formMidBreak.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            viewModel.savePreference(preference);
+        });
+        binding.etMidBreakStart.setText(preference.getMidBreakStart());
+        binding.etMidBreakStart.setOnClickListener(v ->
+                showMaterialTimePicker("中间休息开始", preference.getMidBreakStart(), time -> {
+                    preference.setMidBreakStart(time);
+                    binding.etMidBreakStart.setText(time);
+                    viewModel.savePreference(preference);
+                }));
+        binding.etMidBreakEnd.setText(preference.getMidBreakEnd());
+        binding.etMidBreakEnd.setOnClickListener(v ->
+                showMaterialTimePicker("中间休息结束", preference.getMidBreakEnd(), time -> {
+                    preference.setMidBreakEnd(time);
+                    binding.etMidBreakEnd.setText(time);
                     viewModel.savePreference(preference);
                 }));
 
-        bindSettingItem(binding.itemNightBreak.tvSettingIcon, binding.itemNightBreak.tvSettingLabel, binding.itemNightBreak.tvSettingValue,
-                "🌙", "晚上休息时间", preference.getDefaultNightBreak());
-        binding.itemNightBreak.getRoot().setOnClickListener(v ->
-                showEditTextDialog("晚上休息时间", preference.getDefaultNightBreak(), text -> {
-                    preference.setDefaultNightBreak(text);
+        // Night Break Switch + expandable form
+        binding.switchNightBreak.setChecked(preference.isNightBreakEnabled());
+        binding.formNightBreak.setVisibility(preference.isNightBreakEnabled() ? View.VISIBLE : View.GONE);
+        binding.switchNightBreak.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            preference.setNightBreakEnabled(isChecked);
+            binding.formNightBreak.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            viewModel.savePreference(preference);
+        });
+        binding.etNightBreakStart.setText(preference.getNightBreakStart());
+        binding.etNightBreakStart.setOnClickListener(v ->
+                showMaterialTimePicker("晚上休息开始", preference.getNightBreakStart(), time -> {
+                    preference.setNightBreakStart(time);
+                    binding.etNightBreakStart.setText(time);
+                    viewModel.savePreference(preference);
+                }));
+        binding.etNightBreakEnd.setText(preference.getNightBreakEnd());
+        binding.etNightBreakEnd.setOnClickListener(v ->
+                showMaterialTimePicker("晚上休息结束", preference.getNightBreakEnd(), time -> {
+                    preference.setNightBreakEnd(time);
+                    binding.etNightBreakEnd.setText(time);
                     viewModel.savePreference(preference);
                 }));
 
-        bindSettingItem(binding.itemWorkWeekDays.tvSettingIcon, binding.itemWorkWeekDays.tvSettingLabel, binding.itemWorkWeekDays.tvSettingValue,
-                "📅", "默认工作日", preference.getWorkWeekDays());
-        binding.itemWorkWeekDays.getRoot().setOnClickListener(v ->
-                showEditTextDialog("默认工作日（0=周日,1=周一...）", preference.getWorkWeekDays(), text -> {
-                    preference.setWorkWeekDays(text);
+        // Work Week Days
+        binding.tvWorkWeekDaysValue.setText(formatWorkDays(preference.getWorkWeekDays()) + " ›");
+        binding.itemWorkWeekDays.setOnClickListener(v -> showWorkDaysPicker());
+
+        // Calendar Colors
+        bindColorRow(binding.colorRowWork, workColorViews, preference.getWorkDayColor(), DEFAULT_WORK_COLOR,
+                color -> {
+                    preference.setWorkDayColor(color);
                     viewModel.savePreference(preference);
-                }));
-
-        // Colors
-        bindColorItem(binding.itemColorWork.tvSettingIcon, binding.itemColorWork.tvSettingLabel, binding.itemColorWork.colorDot,
-                "💼", "上班标注颜色", preference.getWorkDayColor());
-        binding.itemColorWork.getRoot().setOnClickListener(v -> showColorPicker("上班标注颜色", preference.getWorkDayColor(), color -> {
-            preference.setWorkDayColor(color);
+                    refreshColorSelection(workColorViews, color);
+                });
+        binding.btnResetWorkColor.setOnClickListener(v -> {
+            preference.setWorkDayColor(DEFAULT_WORK_COLOR);
             viewModel.savePreference(preference);
-        }));
+            refreshColorSelection(workColorViews, DEFAULT_WORK_COLOR);
+            Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
+        });
 
-        bindColorItem(binding.itemColorRest.tvSettingIcon, binding.itemColorRest.tvSettingLabel, binding.itemColorRest.colorDot,
-                "🏖️", "休息标注颜色", preference.getRestDayColor());
-        binding.itemColorRest.getRoot().setOnClickListener(v -> showColorPicker("休息标注颜色", preference.getRestDayColor(), color -> {
-            preference.setRestDayColor(color);
-            viewModel.savePreference(preference);
-        }));
-
-        bindColorItem(binding.itemColorLeave.tvSettingIcon, binding.itemColorLeave.tvSettingLabel, binding.itemColorLeave.colorDot,
-                "🏥", "请假标注颜色", preference.getLeaveDayColor());
-        binding.itemColorLeave.getRoot().setOnClickListener(v -> showColorPicker("请假标注颜色", preference.getLeaveDayColor(), color -> {
-            preference.setLeaveDayColor(color);
-            viewModel.savePreference(preference);
-        }));
-
-        bindColorItem(binding.itemColorLate.tvSettingIcon, binding.itemColorLate.tvSettingLabel, binding.itemColorLate.colorDot,
-                "⏰", "迟到标注颜色", preference.getLateDayColor());
-        binding.itemColorLate.getRoot().setOnClickListener(v -> showColorPicker("迟到标注颜色", preference.getLateDayColor(), color -> {
-            preference.setLateDayColor(color);
-            viewModel.savePreference(preference);
-        }));
-
-        // Data & Salary
-        String hourlyRate = preference.getHourlyRate() != null
-                ? String.format(Locale.getDefault(), "¥%.0f/时", preference.getHourlyRate()) : "未设置";
-        bindSettingItem(binding.itemHourlyRate.tvSettingIcon, binding.itemHourlyRate.tvSettingLabel, binding.itemHourlyRate.tvSettingValue,
-                "💰", "时薪设置", hourlyRate);
-        binding.itemHourlyRate.getRoot().setOnClickListener(v -> {
-            String current = preference.getHourlyRate() != null ? String.valueOf(preference.getHourlyRate()) : "";
-            showEditTextDialog("时薪设置", current, text -> {
-                try {
-                    preference.setHourlyRate(Double.parseDouble(text));
+        bindColorRow(binding.colorRowRest, restColorViews, preference.getRestDayColor(), DEFAULT_REST_COLOR,
+                color -> {
+                    preference.setRestDayColor(color);
                     viewModel.savePreference(preference);
-                } catch (NumberFormatException e) {
-                    Toast.makeText(requireContext(), "请输入有效数字", Toast.LENGTH_SHORT).show();
-                }
-            });
+                    refreshColorSelection(restColorViews, color);
+                });
+        binding.btnResetRestColor.setOnClickListener(v -> {
+            preference.setRestDayColor(DEFAULT_REST_COLOR);
+            viewModel.savePreference(preference);
+            refreshColorSelection(restColorViews, DEFAULT_REST_COLOR);
+            Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindSettingItem(binding.itemOvertimeMultiplier.tvSettingIcon, binding.itemOvertimeMultiplier.tvSettingLabel, binding.itemOvertimeMultiplier.tvSettingValue,
-                "⚡", "加班倍数", String.format(Locale.getDefault(), "%.1f 倍", preference.getOvertimeMultiplier()));
-        binding.itemOvertimeMultiplier.getRoot().setOnClickListener(v -> {
-            showEditTextDialog("加班倍数", String.valueOf(preference.getOvertimeMultiplier()), text -> {
-                try {
-                    preference.setOvertimeMultiplier(Double.parseDouble(text));
+        bindColorRow(binding.colorRowLeave, leaveColorViews, preference.getLeaveDayColor(), DEFAULT_LEAVE_COLOR,
+                color -> {
+                    preference.setLeaveDayColor(color);
                     viewModel.savePreference(preference);
-                } catch (NumberFormatException e) {
-                    Toast.makeText(requireContext(), "请输入有效数字", Toast.LENGTH_SHORT).show();
-                }
-            });
+                    refreshColorSelection(leaveColorViews, color);
+                });
+        binding.btnResetLeaveColor.setOnClickListener(v -> {
+            preference.setLeaveDayColor(DEFAULT_LEAVE_COLOR);
+            viewModel.savePreference(preference);
+            refreshColorSelection(leaveColorViews, DEFAULT_LEAVE_COLOR);
+            Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindSettingItem(binding.itemExportJson.tvSettingIcon, binding.itemExportJson.tvSettingLabel, binding.itemExportJson.tvSettingValue,
-                "💾", "导入 / 导出 JSON", "");
-        binding.itemExportJson.getRoot().setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "导出功能开发中", Toast.LENGTH_SHORT).show();
+        bindColorRow(binding.colorRowLate, lateColorViews, preference.getLateDayColor(), DEFAULT_LATE_COLOR,
+                color -> {
+                    preference.setLateDayColor(color);
+                    viewModel.savePreference(preference);
+                    refreshColorSelection(lateColorViews, color);
+                });
+        binding.btnResetLateColor.setOnClickListener(v -> {
+            preference.setLateDayColor(DEFAULT_LATE_COLOR);
+            viewModel.savePreference(preference);
+            refreshColorSelection(lateColorViews, DEFAULT_LATE_COLOR);
+            Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindSettingItem(binding.itemClearData.tvSettingIcon, binding.itemClearData.tvSettingLabel, binding.itemClearData.tvSettingValue,
-                "🗑️", "清空当月数据", "");
-        binding.itemClearData.getRoot().setOnClickListener(v -> {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("确认清空")
-                    .setMessage("确定要清空当月所有考勤数据吗？此操作不可撤销。")
-                    .setPositiveButton("清空", (dialog, which) -> {
-                        Calendar cal = Calendar.getInstance();
-                        viewModel.clearCurrentMonthData(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH));
-                        Toast.makeText(requireContext(), "已清空当月数据", Toast.LENGTH_SHORT).show();
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
-        });
+        // P1 placeholders (Data & Salary)
+        bindP1Placeholder(binding.itemHourlyRate, "💰", "时薪设置",
+                preference.getHourlyRate() != null
+                        ? String.format(Locale.getDefault(), "¥%.0f/时", preference.getHourlyRate()) : "未设置");
+        bindP1Placeholder(binding.itemOvertimeMultiplier, "⚡", "加班倍数",
+                String.format(Locale.getDefault(), "%.1f 倍", preference.getOvertimeMultiplier()));
+        bindP1Placeholder(binding.itemExportJson, "💾", "导入 / 导出 JSON", "");
+        bindP1Placeholder(binding.itemClearData, "🗑️", "清空当月数据", "");
+
+        // Dark Mode (P1 placeholder)
+        binding.btnDarkMode.setAlpha(0.5f);
+        binding.btnDarkMode.setClickable(false);
     }
 
-    private void bindSettingItem(TextView tvIcon, TextView tvLabel, TextView tvValue, String icon, String label, String value) {
-        tvIcon.setText(icon);
-        tvLabel.setText(label);
-        tvValue.setText(value + (value.isEmpty() ? "" : " ›"));
+    private void bindP1Placeholder(com.toilernote.databinding.ItemSettingBinding itemBinding, String icon, String label, String value) {
+        itemBinding.tvSettingIcon.setText(icon);
+        itemBinding.tvSettingLabel.setText(label);
+        itemBinding.tvSettingValue.setText(value + (value.isEmpty() ? "" : " ›"));
+        itemBinding.tvSettingDesc.setVisibility(View.GONE);
+        itemBinding.getRoot().setAlpha(0.5f);
+        itemBinding.getRoot().setClickable(false);
     }
 
-    private void bindColorItem(TextView tvIcon, TextView tvLabel, View colorDot, String icon, String label, String color) {
-        tvIcon.setText(icon);
-        tvLabel.setText(label);
-        try {
-            colorDot.setBackgroundColor(Color.parseColor(color));
-        } catch (Exception e) {
-            colorDot.setBackgroundColor(Color.GRAY);
-        }
-    }
-
-    private void showTimePicker(String title, String currentTime, TimeCallback callback) {
+    private void showMaterialTimePicker(String title, String currentTime, Consumer<String> onConfirm) {
         int hour = 9, minute = 0;
         if (currentTime != null && currentTime.contains(":")) {
             String[] parts = currentTime.split(":");
@@ -213,87 +234,150 @@ public class SettingsFragment extends Fragment {
             } catch (NumberFormatException ignored) {
             }
         }
-        new TimePickerDialog(requireContext(), (view, hourOfDay, minute1) -> {
-            String time = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute1);
-            callback.onTimeSelected(time);
-        }, hour, minute, true).show();
+
+        MaterialTimePicker picker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setHour(hour)
+                .setMinute(minute)
+                .setTitleText(title)
+                .build();
+
+        picker.show(getParentFragmentManager(), "time_picker");
+        picker.addOnPositiveButtonClickListener(v -> {
+            String time = String.format(Locale.getDefault(), "%02d:%02d", picker.getHour(), picker.getMinute());
+            onConfirm.accept(time);
+        });
     }
 
-    private void showEditTextDialog(String title, String currentValue, TextCallback callback) {
-        EditText editText = new EditText(requireContext());
-        editText.setText(currentValue);
-        new AlertDialog.Builder(requireContext())
-                .setTitle(title)
-                .setView(editText)
-                .setPositiveButton("确定", (dialog, which) -> callback.onTextEntered(editText.getText().toString()))
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    private void showColorPicker(String title, String currentColor, ColorCallback callback) {
-        String[] presets = {"#2196F3", "#1976D2", "#0D47A1", "#4CAF50", "#009688", "#98FB98",
-                "#FFEB3B", "#FFC107", "#FF9800", "#F44336", "#E91E63", "#B71C1C"};
-        String[] names = {"蓝", "靛蓝", "深蓝", "绿", "青绿", "薄荷绿",
-                "黄", "琥珀", "橙黄", "红", "玫红", "深红"};
-
-        LinearLayout layout = new LinearLayout(requireContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(48, 24, 48, 24);
-
-        for (int i = 0; i < presets.length; i++) {
-            TextView tv = new TextView(requireContext());
-            tv.setText("● " + names[i]);
-            tv.setTextSize(16);
-            tv.setPadding(16, 16, 16, 16);
-            try {
-                tv.setTextColor(Color.parseColor(presets[i]));
-            } catch (Exception e) {
-                tv.setTextColor(Color.BLACK);
-            }
-            final String color = presets[i];
-            tv.setOnClickListener(v -> callback.onColorSelected(color));
-            layout.addView(tv);
+    private void showWorkDaysPicker() {
+        String[] dayLabels = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+        boolean[] checked = new boolean[7];
+        Set<Integer> workDays = parseWorkDays(preference.getWorkWeekDays());
+        for (int day : workDays) {
+            if (day >= 0 && day < 7) checked[day] = true;
         }
 
-        EditText customColor = new EditText(requireContext());
-        customColor.setHint("自定义 HEX 颜色（如 #FF0000）");
-        customColor.setText(currentColor);
-        layout.addView(customColor);
-
         new AlertDialog.Builder(requireContext())
-                .setTitle(title)
-                .setView(layout)
+                .setTitle("默认工作日")
+                .setMultiChoiceItems(dayLabels, checked, (dialog, which, isChecked) -> checked[which] = isChecked)
                 .setPositiveButton("确定", (dialog, which) -> {
-                    String color = customColor.getText().toString();
-                    if (color.matches("#[0-9A-Fa-f]{6}")) {
-                        callback.onColorSelected(color);
-                    } else if (!color.isEmpty()) {
-                        Toast.makeText(requireContext(), "颜色格式错误", Toast.LENGTH_SHORT).show();
+                    List<String> selected = new ArrayList<>();
+                    for (int i = 0; i < 7; i++) {
+                        if (checked[i]) selected.add(String.valueOf(i));
                     }
+                    String value = selected.isEmpty() ? "1,2,3,4,5" : String.join(",", selected);
+                    preference.setWorkWeekDays(value);
+                    binding.tvWorkWeekDaysValue.setText(formatWorkDays(value) + " ›");
+                    viewModel.savePreference(preference);
                 })
                 .setNegativeButton("取消", null)
                 .show();
     }
 
-    private void toggleDarkMode() {
-        int currentMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        if (currentMode == Configuration.UI_MODE_NIGHT_YES) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+    private Set<Integer> parseWorkDays(String workWeekDays) {
+        Set<Integer> set = new HashSet<>();
+        if (workWeekDays == null || workWeekDays.isEmpty()) {
+            set.add(1); set.add(2); set.add(3); set.add(4); set.add(5);
+            return set;
+        }
+        String[] parts = workWeekDays.split(",");
+        for (String p : parts) {
+            try {
+                set.add(Integer.parseInt(p.trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return set;
+    }
+
+    private String formatWorkDays(String workWeekDays) {
+        Set<Integer> days = parseWorkDays(workWeekDays);
+        String[] labels = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+        if (days.size() == 5 && days.contains(1) && days.contains(2) && days.contains(3) && days.contains(4) && days.contains(5)) {
+            return "周一至周五";
+        }
+        if (days.size() == 7) {
+            return "每天";
+        }
+        if (days.size() == 2 && days.contains(6) && days.contains(0)) {
+            return "周末";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 7; i++) {
+            if (days.contains(i)) {
+                if (sb.length() > 0) sb.append("、");
+                sb.append(labels[i]);
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : "未设置";
+    }
+
+    private void bindColorRow(LinearLayout container, List<View> colorViews, String currentColor, String defaultColor, Consumer<String> onSelect) {
+        container.removeAllViews();
+        colorViews.clear();
+        String selectedColor = currentColor != null ? currentColor : defaultColor;
+
+        for (String color : COLOR_PRESETS) {
+            boolean isSelected = color.equalsIgnoreCase(selectedColor);
+            View option = createColorOption(color, isSelected);
+            option.setOnClickListener(v -> {
+                onSelect.accept(color);
+            });
+            container.addView(option);
+            colorViews.add(option);
         }
     }
 
-    interface TimeCallback {
-        void onTimeSelected(String time);
+    private View createColorOption(String colorHex, boolean isSelected) {
+        FrameLayout container = new FrameLayout(requireContext());
+        int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, getResources().getDisplayMetrics());
+        int dotSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, getResources().getDisplayMetrics());
+        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics());
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+        params.setMargins(margin, 0, margin, 0);
+        container.setLayoutParams(params);
+
+        View dot = new View(requireContext());
+        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dotSize, dotSize);
+        dotParams.gravity = Gravity.CENTER;
+        dot.setLayoutParams(dotParams);
+
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setColor(Color.parseColor(colorHex));
+        dot.setBackground(drawable);
+        container.addView(dot);
+
+        if (isSelected) {
+            GradientDrawable ring = new GradientDrawable();
+            ring.setShape(GradientDrawable.OVAL);
+            ring.setColor(ContextCompat.getColor(requireContext(), R.color.primary_light));
+            ring.setStroke(
+                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
+                    ContextCompat.getColor(requireContext(), R.color.primary));
+            container.setBackground(ring);
+        }
+
+        return container;
     }
 
-    interface TextCallback {
-        void onTextEntered(String text);
-    }
-
-    interface ColorCallback {
-        void onColorSelected(String color);
+    private void refreshColorSelection(List<View> colorViews, String selectedColor) {
+        for (int i = 0; i < colorViews.size(); i++) {
+            View container = colorViews.get(i);
+            String color = COLOR_PRESETS[i];
+            if (color.equalsIgnoreCase(selectedColor)) {
+                GradientDrawable ring = new GradientDrawable();
+                ring.setShape(GradientDrawable.OVAL);
+                ring.setColor(ContextCompat.getColor(requireContext(), R.color.primary_light));
+                ring.setStroke(
+                        (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()),
+                        ContextCompat.getColor(requireContext(), R.color.primary));
+                container.setBackground(ring);
+            } else {
+                container.setBackground(null);
+            }
+        }
     }
 
     @Override

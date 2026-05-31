@@ -30,45 +30,47 @@ public class SettingsViewModel extends AndroidViewModel {
     }
 
     public void savePreference(UserPreference preference) {
-        AppDatabase.getInstance(getApplication()).userPreferenceDao().insert(preference);
+        new Thread(() -> AppDatabase.getInstance(getApplication()).userPreferenceDao().insert(preference)).start();
     }
 
     public void clearCurrentMonthData(int year, int month) {
-        String prefix = TimeUtils.getMonthPrefix(year, month);
-        AppDatabase.getInstance(getApplication()).dailyRecordDao().deleteRecordsByMonth(prefix);
+        new Thread(() -> {
+            String prefix = TimeUtils.getMonthPrefix(year, month);
+            AppDatabase.getInstance(getApplication()).dailyRecordDao().deleteRecordsByMonth(prefix);
+        }).start();
     }
 
     public void clearAllData() {
-        AppDatabase.getInstance(getApplication()).dailyRecordDao().deleteAll();
+        new Thread(() -> AppDatabase.getInstance(getApplication()).dailyRecordDao().deleteAll()).start();
     }
 
     public void initRestDaysForMonth(UserPreference pref, int year, int month) {
         if (pref == null || pref.getWorkWeekDays() == null) return;
-
-        Set<Integer> workDays = new HashSet<>();
-        String[] days = pref.getWorkWeekDays().split(",");
-        for (String d : days) {
-            try {
-                workDays.add(Integer.parseInt(d.trim()));
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        int daysInMonth = TimeUtils.getDaysInMonth(year, month);
-        for (int day = 1; day <= daysInMonth; day++) {
-            String dateStr = TimeUtils.formatDate(year, month, day);
-            int dayOfWeek = TimeUtils.getDayOfWeek(dateStr);
-            // Convert: Calendar.SUNDAY=1 -> 0, MONDAY=2 -> 1, etc.
-            int workDayIndex = dayOfWeek;
-
-            if (!workDays.contains(workDayIndex)) {
-                DailyRecord existing = AppDatabase.getInstance(getApplication())
-                        .dailyRecordDao().getRecordByDate(dateStr);
-                if (existing == null) {
-                    DailyRecord record = new DailyRecord(dateStr, "REST");
-                    AppDatabase.getInstance(getApplication()).dailyRecordDao().insert(record);
+        new Thread(() -> {
+            Set<Integer> workDays = new HashSet<>();
+            String[] days = pref.getWorkWeekDays().split(",");
+            for (String d : days) {
+                try {
+                    workDays.add(Integer.parseInt(d.trim()));
+                } catch (NumberFormatException ignored) {
                 }
             }
-        }
+
+            int daysInMonth = TimeUtils.getDaysInMonth(year, month);
+            for (int day = 1; day <= daysInMonth; day++) {
+                String dateStr = TimeUtils.formatDate(year, month, day);
+                int dayOfWeek = TimeUtils.getDayOfWeek(dateStr);
+                int workDayIndex = dayOfWeek;
+
+                if (!workDays.contains(workDayIndex)) {
+                    DailyRecord existing = AppDatabase.getInstance(getApplication())
+                            .dailyRecordDao().getRecordByDate(dateStr);
+                    if (existing == null) {
+                        DailyRecord record = new DailyRecord(dateStr, "REST");
+                        AppDatabase.getInstance(getApplication()).dailyRecordDao().insert(record);
+                    }
+                }
+            }
+        }).start();
     }
 }

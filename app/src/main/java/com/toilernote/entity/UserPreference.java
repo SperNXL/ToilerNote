@@ -17,10 +17,16 @@ public class UserPreference {
     private String defaultWorkEnd = "18:00";
     private String defaultMidBreak = "12:00-14:00";
     private String defaultNightBreak = "18:00-19:00";
-    private String workDayColor = "#2196F3";
-    private String restDayColor = "#4CAF50";
-    private String leaveDayColor = "#FFEB3B";
-    private String lateDayColor = "#F44336";
+    private String midBreakStart = "12:00";
+    private String midBreakEnd = "14:00";
+    private String nightBreakStart = "18:00";
+    private String nightBreakEnd = "19:00";
+    private boolean isMidBreakEnabled = true;
+    private boolean isNightBreakEnabled = true;
+    private String workDayColor = "#6366F1";
+    private String restDayColor = "#10B981";
+    private String leaveDayColor = "#F59E0B";
+    private String lateDayColor = "#EF4444";
     private Double hourlyRate;
     private String workWeekDays = "1,2,3,4,5";
     private double overtimeMultiplier = 1.5;
@@ -79,6 +85,54 @@ public class UserPreference {
 
     public void setDefaultNightBreak(String defaultNightBreak) {
         this.defaultNightBreak = defaultNightBreak;
+    }
+
+    public String getMidBreakStart() {
+        return midBreakStart;
+    }
+
+    public void setMidBreakStart(String midBreakStart) {
+        this.midBreakStart = midBreakStart;
+    }
+
+    public String getMidBreakEnd() {
+        return midBreakEnd;
+    }
+
+    public void setMidBreakEnd(String midBreakEnd) {
+        this.midBreakEnd = midBreakEnd;
+    }
+
+    public String getNightBreakStart() {
+        return nightBreakStart;
+    }
+
+    public void setNightBreakStart(String nightBreakStart) {
+        this.nightBreakStart = nightBreakStart;
+    }
+
+    public String getNightBreakEnd() {
+        return nightBreakEnd;
+    }
+
+    public void setNightBreakEnd(String nightBreakEnd) {
+        this.nightBreakEnd = nightBreakEnd;
+    }
+
+    public boolean isMidBreakEnabled() {
+        return isMidBreakEnabled;
+    }
+
+    public void setMidBreakEnabled(boolean midBreakEnabled) {
+        isMidBreakEnabled = midBreakEnabled;
+    }
+
+    public boolean isNightBreakEnabled() {
+        return isNightBreakEnabled;
+    }
+
+    public void setNightBreakEnabled(boolean nightBreakEnabled) {
+        isNightBreakEnabled = nightBreakEnabled;
     }
 
     public String getWorkDayColor() {
