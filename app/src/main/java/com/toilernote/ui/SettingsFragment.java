@@ -40,6 +40,8 @@ public class SettingsFragment extends Fragment {
     private SettingsViewModel viewModel;
     private UserPreference preference;
 
+    private String versionName;
+
     private static final String[] COLOR_PRESETS = {
             "#FFFFFF", "#F8FAFC", "#1E293B", "#3B82F6", "#60A5FA", "#FB7185", "#EF4444", "#FACC15"
     };
@@ -202,17 +204,17 @@ public class SettingsFragment extends Fragment {
         });
 
         // P1 placeholders (Data & Salary)
-        bindP1Placeholder(binding.itemHourlyRate, "💰", "时薪设置",
-                preference.getHourlyRate() != null
-                        ? String.format(Locale.getDefault(), "¥%.0f/时", preference.getHourlyRate()) : "未设置");
-        bindP1Placeholder(binding.itemOvertimeMultiplier, "⚡", "加班倍数",
-                String.format(Locale.getDefault(), "%.1f 倍", preference.getOvertimeMultiplier()));
-        bindP1Placeholder(binding.itemExportJson, "💾", "导入 / 导出 JSON", "");
-        bindP1Placeholder(binding.itemClearData, "🗑️", "清空当月数据", "");
-
-        // Dark Mode (P1 placeholder)
-        binding.btnDarkMode.setAlpha(0.5f);
-        binding.btnDarkMode.setClickable(false);
+//        bindP1Placeholder(binding.itemHourlyRate, "💰", "时薪设置",
+//                preference.getHourlyRate() != null
+//                        ? String.format(Locale.getDefault(), "¥%.0f/时", preference.getHourlyRate()) : "未设置");
+//        bindP1Placeholder(binding.itemOvertimeMultiplier, "⚡", "加班倍数",
+//                String.format(Locale.getDefault(), "%.1f 倍", preference.getOvertimeMultiplier()));
+//        bindP1Placeholder(binding.itemExportJson, "💾", "导入 / 导出 JSON", "");
+//        bindP1Placeholder(binding.itemClearData, "🗑️", "清空当月数据", "");
+//
+//        // Dark Mode (P1 placeholder)
+//        binding.btnDarkMode.setAlpha(0.5f);
+//        binding.btnDarkMode.setClickable(false);
     }
 
     private void bindP1Placeholder(com.toilernote.databinding.ItemSettingBinding itemBinding, String icon, String label, String value) {

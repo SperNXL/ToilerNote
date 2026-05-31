@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">牛马日记</string>
+    <string name="version_name">v1.0.0 Release 2026</string>
     <string name="attendance">考勤</string>
     <string name="statistics">统计</string>
     <string name="settings">设置</string>
