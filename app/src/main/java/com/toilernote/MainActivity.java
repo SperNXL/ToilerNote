@@ -51,6 +51,12 @@ public class MainActivity extends AppCompatActivity {
                 updateHeader(getString(R.string.settings), getString(R.string.preference_data));
                 return true;
             }
+            // TODO: 2026/5/31 统计功能
+//            else if (itemId == R.id.nav_statistics) {
+//                binding.viewPager.setCurrentItem(1, false);
+//                updateHeader(getString(R.string.statistics), getString(R.string.data_insight));
+//                return true;
+//            }
             return false;
         });
 
