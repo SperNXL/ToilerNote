@@ -14,59 +14,59 @@
         android:paddingBottom="0dp">
 
         <!-- User Info (P1 placeholder) -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            android:layout_margin="1dp"
-            app:contentPadding="16dp">
+<!--        <androidx.cardview.widget.CardView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:cardCornerRadius="16dp"-->
+<!--            app:cardElevation="2dp"-->
+<!--            android:layout_margin="1dp"-->
+<!--            app:contentPadding="16dp">-->
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:gravity="center_vertical"-->
+<!--                android:orientation="horizontal">-->
 
-                <TextView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_circle_primary_light"
-                    android:gravity="center"
-                    android:text="🐮"
-                    android:textSize="24sp" />
+<!--                <TextView-->
+<!--                    android:layout_width="48dp"-->
+<!--                    android:layout_height="48dp"-->
+<!--                    android:background="@drawable/bg_circle_primary_light"-->
+<!--                    android:gravity="center"-->
+<!--                    android:text="🐮"-->
+<!--                    android:textSize="24sp" />-->
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginStart="12dp"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:orientation="vertical">-->
 
-                    <TextView
-                        android:id="@+id/tvNickname"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        tools:text="牛马一号" />
+<!--                    <TextView-->
+<!--                        android:id="@+id/tvNickname"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:textColor="@color/text_primary"-->
+<!--                        android:textSize="16sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        tools:text="牛马一号" />-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/tap_to_edit"
-                        android:textColor="@color/text_tertiary"
-                        android:textSize="12sp" />
-                </LinearLayout>
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="@string/tap_to_edit"-->
+<!--                        android:textColor="@color/text_tertiary"-->
+<!--                        android:textSize="12sp" />-->
+<!--                </LinearLayout>-->
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/text_tertiary" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+<!--                <ImageView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:src="@drawable/ic_chevron_right"-->
+<!--                    app:tint="@color/text_tertiary" />-->
+<!--            </LinearLayout>-->
+<!--        </androidx.cardview.widget.CardView>-->
 
         <!-- Default Time Settings -->
         <androidx.cardview.widget.CardView

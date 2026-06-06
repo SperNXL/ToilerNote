@@ -80,7 +80,7 @@ public class SettingsFragment extends Fragment {
 
     private void bindSettings() {
         // Nickname (P1 placeholder)
-        binding.tvNickname.setText(preference.getNickname());
+//        binding.tvNickname.setText(preference.getNickname());
 
         // Work Start Time (always visible)
         binding.etWorkStart.setText(preference.getDefaultWorkStart());
