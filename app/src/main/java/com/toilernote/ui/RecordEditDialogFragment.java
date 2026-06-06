@@ -131,6 +131,7 @@ public class RecordEditDialogFragment extends DialogFragment {
                 window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                 window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 window.setWindowAnimations(R.style.DialogAnimation);
+                window.getDecorView().setPadding(0, 130, 0, 0);
             }
         }
     }
