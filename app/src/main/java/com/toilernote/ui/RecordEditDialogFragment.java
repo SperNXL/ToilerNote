@@ -196,13 +196,16 @@ public class RecordEditDialogFragment extends DialogFragment {
         if ("REST".equals(status)) {
             binding.workFormContainer.setVisibility(View.GONE);
             binding.fullDayLeaveContainer.setVisibility(View.GONE);
+            binding.leaveDivider.setVisibility(View.GONE);
         } else if ("LEAVE".equals(status)) {
             binding.workFormContainer.setVisibility(View.VISIBLE);
             binding.fullDayLeaveContainer.setVisibility(View.VISIBLE);
+            binding.leaveDivider.setVisibility(View.VISIBLE);
             updateLeaveFormVisibility();
         } else {
             binding.workFormContainer.setVisibility(View.VISIBLE);
             binding.fullDayLeaveContainer.setVisibility(View.GONE);
+            binding.leaveDivider.setVisibility(View.GONE);
             binding.leaveTimeContainer.setVisibility(View.GONE);
         }
     }

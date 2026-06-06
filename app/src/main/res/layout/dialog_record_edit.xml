@@ -125,12 +125,18 @@
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
+            <View
+                android:id="@+id/leaveDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:visibility="gone"
+                android:background="@color/divider" />
+
             <!-- Work Form -->
             <LinearLayout
                 android:id="@+id/workFormContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:orientation="vertical">
 
                 <!-- Full Day Overtime Switch -->
