@@ -99,6 +99,12 @@ APK 输出路径：`app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
+## Release 编译
+**克隆后执行** 
+```
+./gradlew assembleRelease
+```
+
 ## git推送
 
 **./.git/config**
