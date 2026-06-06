@@ -28,6 +28,7 @@ import com.toilernote.entity.UserPreference;
 import com.toilernote.viewmodel.SettingsViewModel;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -114,6 +115,7 @@ public class SettingsFragment extends Fragment {
                     preference.setMidBreakStart(time);
                     binding.etMidBreakStart.setText(time);
                     viewModel.savePreference(preference);
+                    updateDurationDisplay(preference.getMidBreakStart(), preference.getMidBreakEnd());
                 }));
         binding.etMidBreakEnd.setText(preference.getMidBreakEnd());
         binding.etMidBreakEnd.setOnClickListener(v ->
@@ -121,7 +123,9 @@ public class SettingsFragment extends Fragment {
                     preference.setMidBreakEnd(time);
                     binding.etMidBreakEnd.setText(time);
                     viewModel.savePreference(preference);
+                    updateDurationDisplay(preference.getMidBreakStart(), preference.getMidBreakEnd());
                 }));
+//        updateDurationDisplay(binding.tvMidBreakDuration, preference.getMidBreakStart(), preference.getMidBreakEnd());
 
         // Night Break Switch + expandable form
         binding.switchNightBreak.setChecked(preference.isNightBreakEnabled());
@@ -137,6 +141,7 @@ public class SettingsFragment extends Fragment {
                     preference.setNightBreakStart(time);
                     binding.etNightBreakStart.setText(time);
                     viewModel.savePreference(preference);
+                    updateDurationDisplay(preference.getNightBreakStart(), preference.getNightBreakEnd());
                 }));
         binding.etNightBreakEnd.setText(preference.getNightBreakEnd());
         binding.etNightBreakEnd.setOnClickListener(v ->
@@ -144,6 +149,7 @@ public class SettingsFragment extends Fragment {
                     preference.setNightBreakEnd(time);
                     binding.etNightBreakEnd.setText(time);
                     viewModel.savePreference(preference);
+                    updateDurationDisplay(preference.getNightBreakStart(), preference.getNightBreakEnd());
                 }));
 
         // Work Week Days
@@ -236,19 +242,39 @@ public class SettingsFragment extends Fragment {
             } catch (NumberFormatException ignored) {
             }
         }
-
+    
         MaterialTimePicker picker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(hour)
                 .setMinute(minute)
                 .setTitleText(title)
                 .build();
-
+    
         picker.show(getParentFragmentManager(), "time_picker");
         picker.addOnPositiveButtonClickListener(v -> {
             String time = String.format(Locale.getDefault(), "%02d:%02d", picker.getHour(), picker.getMinute());
             onConfirm.accept(time);
         });
+    }
+    private int parseTimeToMinutes(String time) {
+        if (time == null || !time.contains(":")) return 0;
+        String[] parts = time.split(":");
+        return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
+    }
+    
+    private String formatDuration(int minutes) {
+        if (minutes <= 0) return "";
+        int hours = minutes / 60;
+        int mins = minutes % 60;
+        if (mins == 0) return "休息时长：" + hours + "小时";
+        return "休息时长：" + hours + "小时" + mins + "分钟";
+    }
+    
+    private void updateDurationDisplay(String startTime, String endTime) {
+        int diff = parseTimeToMinutes(endTime) - parseTimeToMinutes(startTime);
+        if (diff > 0) {
+        } else {
+        }
     }
 
     private void showWorkDaysPicker() {
@@ -268,12 +294,30 @@ public class SettingsFragment extends Fragment {
                         if (checked[i]) selected.add(String.valueOf(i));
                     }
                     String value = selected.isEmpty() ? "1,2,3,4,5" : String.join(",", selected);
-                    preference.setWorkWeekDays(value);
-                    binding.tvWorkWeekDaysValue.setText(formatWorkDays(value) + " ›");
-                    viewModel.savePreference(preference);
+
+                    // Confirm before applying
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("确认修改")
+                            .setMessage("新的工作日设置将从明天起生效，历史记录不受影响。是否保存？")
+                            .setPositiveButton("保存", (d, w) -> {
+                                preference.setWorkWeekDays(value);
+                                preference.setWorkDaysEffectiveDate(getTomorrowDate());
+                                binding.tvWorkWeekDaysValue.setText(formatWorkDays(value) + " ›");
+                                viewModel.savePreference(preference);
+                                Toast.makeText(requireContext(), "已保存，明日生效", Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
                 })
                 .setNegativeButton("取消", null)
                 .show();
+    }
+
+    private String getTomorrowDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        return String.format(Locale.getDefault(), "%d-%02d-%02d",
+                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
     }
 
     private Set<Integer> parseWorkDays(String workWeekDays) {

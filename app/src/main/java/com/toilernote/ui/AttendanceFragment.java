@@ -21,7 +21,9 @@ import com.toilernote.viewmodel.CalendarViewModel;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AttendanceFragment extends Fragment {
 
@@ -109,11 +111,41 @@ public class AttendanceFragment extends Fragment {
             items.add(new CalendarAdapter.DayItem(prevMonthDays - i, null, false, false));
         }
 
+        // Parse work days configuration
+        Set<Integer> workDays = null;
+        String effectiveDate = null;
+        boolean hasWorkDaysConfig = false;
+        if (currentPreference != null && currentPreference.getWorkWeekDays() != null) {
+            workDays = new HashSet<>();
+            String[] days = currentPreference.getWorkWeekDays().split(",");
+            for (String d : days) {
+                try {
+                    workDays.add(Integer.parseInt(d.trim()));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            effectiveDate = currentPreference.getWorkDaysEffectiveDate();
+            hasWorkDaysConfig = !workDays.isEmpty();
+        }
+
         // Current month
         for (int day = 1; day <= daysInMonth; day++) {
             String dateStr = TimeUtils.formatDate(year, month, day);
             boolean isToday = TimeUtils.isToday(year, month, day);
+
+            boolean isRestDay = false;
+            if (hasWorkDaysConfig) {
+                boolean shouldApply = effectiveDate == null || dateStr.compareTo(effectiveDate) >= 0;
+                if (shouldApply) {
+                    int dayOfWeek = TimeUtils.getDayOfWeek(dateStr);
+                    if (!workDays.contains(dayOfWeek)) {
+                        isRestDay = true;
+                    }
+                }
+            }
+
             CalendarAdapter.DayItem item = new CalendarAdapter.DayItem(day, dateStr, true, isToday);
+            item.isRestDay = isRestDay;
             for (DailyRecord r : records) {
                 if (dateStr.equals(r.getDate())) {
                     item.record = r;

@@ -111,6 +111,12 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                             }
                         }
                     }
+                } else if (item.isRestDay) {
+                    holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+                    holder.tvDayNum.getBackground().setTint(restColor);
+                    holder.tvDayNum.setTextColor(Color.WHITE);
+                    holder.tvDayInfo.setText("休");
+                    holder.tvDayInfo.setVisibility(View.VISIBLE);
                 } else {
                     holder.tvDayNum.setBackground(null);
                     holder.tvDayNum.setTextColor(Color.parseColor("#1E293B"));
@@ -157,6 +163,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
         public boolean isCurrentMonth;
         public boolean isToday;
         public DailyRecord record;
+        public boolean isRestDay;
 
         public DayItem(int day, String date, boolean isCurrentMonth, boolean isToday) {
             this.day = day;

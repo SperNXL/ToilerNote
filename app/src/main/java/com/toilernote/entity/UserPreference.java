@@ -29,6 +29,7 @@ public class UserPreference {
     private String lateDayColor = "#EF4444";
     private Double hourlyRate;
     private String workWeekDays = "1,2,3,4,5";
+    private String workDaysEffectiveDate;
     private double overtimeMultiplier = 1.5;
 
     public Integer getId() {
@@ -181,6 +182,14 @@ public class UserPreference {
 
     public void setWorkWeekDays(String workWeekDays) {
         this.workWeekDays = workWeekDays;
+    }
+
+    public String getWorkDaysEffectiveDate() {
+        return workDaysEffectiveDate;
+    }
+
+    public void setWorkDaysEffectiveDate(String workDaysEffectiveDate) {
+        this.workDaysEffectiveDate = workDaysEffectiveDate;
     }
 
     public double getOvertimeMultiplier() {
