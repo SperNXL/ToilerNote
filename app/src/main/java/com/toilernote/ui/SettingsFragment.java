@@ -44,7 +44,7 @@ public class SettingsFragment extends Fragment {
     private String versionName;
 
     private static final String[] COLOR_PRESETS = {
-            "#FFFFFF", "#F8FAFC", "#1E293B", "#3B82F6", "#60A5FA", "#FB7185", "#EF4444", "#FACC15"
+            "#FFFFFF", "#1E293B", "#3B82F6", "#6366F1", "#10B981", "#F59E0B", "#EF4444", "#FACC15"
     };
     private static final String DEFAULT_WORK_COLOR = "#6366F1";
     private static final String DEFAULT_REST_COLOR = "#10B981";
