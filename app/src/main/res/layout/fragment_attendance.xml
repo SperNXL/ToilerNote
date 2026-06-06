@@ -197,13 +197,13 @@
                         android:layout_columnWeight="1"
                         android:layout_marginEnd="6dp" />
 
-                    <include
-                        android:id="@+id/statEstimatedSalary"
-                        layout="@layout/item_stat_card"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_marginStart="6dp" />
+<!--                    <include-->
+<!--                        android:id="@+id/statEstimatedSalary"-->
+<!--                        layout="@layout/item_stat_card"-->
+<!--                        android:layout_width="0dp"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_columnWeight="1"-->
+<!--                        android:layout_marginStart="6dp" />-->
                 </GridLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

@@ -183,12 +183,13 @@ public class AttendanceFragment extends Fragment {
         binding.statLateCount.tvStatLabel.setText("迟到次数");
         binding.statLateCount.tvStatValue.setText(String.valueOf(stats.getLateCount()));
 
-        binding.statEstimatedSalary.tvStatLabel.setText("预估月薪");
-        if (stats.getEstimatedSalary() > 0) {
-            binding.statEstimatedSalary.tvStatValue.setText(String.format(java.util.Locale.getDefault(), "¥%.0f", stats.getEstimatedSalary()));
-        } else {
-            binding.statEstimatedSalary.tvStatValue.setText("--");
-        }
+        // TODO: 2026/6/6 下版本支持月薪计算 
+//        binding.statEstimatedSalary.tvStatLabel.setText("预估月薪");
+//        if (stats.getEstimatedSalary() > 0) {
+//            binding.statEstimatedSalary.tvStatValue.setText(String.format(java.util.Locale.getDefault(), "¥%.0f", stats.getEstimatedSalary()));
+//        } else {
+//            binding.statEstimatedSalary.tvStatValue.setText("--");
+//        }
     }
 
     private void openEditSheet(String date) {
