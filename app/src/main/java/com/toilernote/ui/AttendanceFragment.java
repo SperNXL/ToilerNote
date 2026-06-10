@@ -177,8 +177,8 @@ public class AttendanceFragment extends Fragment {
         binding.statOvertime.tvStatLabel.setText("加班时长");
         binding.statOvertime.tvStatValue.setText(String.format(java.util.Locale.getDefault(), "%.1fh", stats.getTotalOvertimeHours()));
 
-        binding.statLeaveDays.tvStatLabel.setText("请假天数");
-        binding.statLeaveDays.tvStatValue.setText(String.valueOf(stats.getLeaveDays()));
+        binding.statLeaveDays.tvStatLabel.setText("请假次数");
+        binding.statLeaveDays.tvStatValue.setText(String.valueOf(stats.getLeaveCount()));
 
         binding.statLateCount.tvStatLabel.setText("迟到次数");
         binding.statLateCount.tvStatValue.setText(String.valueOf(stats.getLateCount()));

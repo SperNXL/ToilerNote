@@ -77,7 +77,7 @@ public class CalendarViewModel extends AndroidViewModel {
         double totalWork = 0;
         double totalOt = 0;
         int workDays = 0;
-        int leaveDays = 0;
+        int leaveCount = 0;
         int lateCount = 0;
 
         for (DailyRecord r : records) {
@@ -87,14 +87,21 @@ public class CalendarViewModel extends AndroidViewModel {
                 totalOt += r.getOvertimeHours();
                 if (r.isLate()) lateCount++;
             } else if ("LEAVE".equals(r.getStatus())) {
-                leaveDays++;
+                leaveCount++;
+                if (!r.isFullDayLeave()) {
+                    // 非全天请假：算上班天数，工时正常累加，迟到也算
+                    workDays++;
+                    totalWork += r.getWorkHours();
+                    totalOt += r.getOvertimeHours();
+                    if (r.isLate()) lateCount++;
+                }
             }
         }
 
         stats.setWorkDays(workDays);
         stats.setTotalWorkHours(totalWork);
         stats.setTotalOvertimeHours(totalOt);
-        stats.setLeaveDays(leaveDays);
+        stats.setLeaveCount(leaveCount);
         stats.setLateCount(lateCount);
         stats.setAverageDailyHours(workDays > 0 ? totalWork / workDays : 0);
 

@@ -4,7 +4,7 @@ public class MonthStatistics {
     private int workDays;
     private double totalWorkHours;
     private double totalOvertimeHours;
-    private int leaveDays;
+    private int leaveCount;
     private int lateCount;
     private double averageDailyHours;
     private double estimatedSalary;
@@ -36,12 +36,12 @@ public class MonthStatistics {
         this.totalOvertimeHours = totalOvertimeHours;
     }
 
-    public int getLeaveDays() {
-        return leaveDays;
+    public int getLeaveCount() {
+        return leaveCount;
     }
 
-    public void setLeaveDays(int leaveDays) {
-        this.leaveDays = leaveDays;
+    public void setLeaveCount(int leaveCount) {
+        this.leaveCount = leaveCount;
     }
 
     public int getLateCount() {
