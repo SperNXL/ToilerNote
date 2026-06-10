@@ -55,7 +55,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
     public void onBindViewHolder(@NonNull DayViewHolder holder, int position) {
         DayItem item = dayItems.get(position);
         holder.tvDayNum.setText(String.valueOf(item.day));
-        holder.tvDayInfo.setVisibility(View.GONE);
+        holder.tvDayInfo.setVisibility(View.INVISIBLE);
         holder.lateBadge.setVisibility(View.GONE);
 
         if (preference != null) {
