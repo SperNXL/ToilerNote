@@ -1,6 +1,9 @@
 package com.toilernote.adapter;
 
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,8 +76,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                 if (item.record != null) {
                     String status = item.record.getStatus();
                     if ("WORK".equals(status)) {
-                        holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
-                        holder.tvDayNum.getBackground().setTint(workColor);
+                        applyStatusBackground(holder, workColor, item.isToday);
                         holder.tvDayNum.setTextColor(Color.WHITE);
                         String info = String.format(java.util.Locale.getDefault(), "%.0fh+%.0fh",
                                 item.record.getWorkHours(), item.record.getOvertimeHours());
@@ -85,21 +87,18 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                             holder.lateBadge.getBackground().setTint(lateColor);
                         }
                     } else if ("REST".equals(status)) {
-                        holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
-                        holder.tvDayNum.getBackground().setTint(restColor);
+                        applyStatusBackground(holder, restColor, item.isToday);
                         holder.tvDayNum.setTextColor(Color.WHITE);
                         holder.tvDayInfo.setText("休");
                         holder.tvDayInfo.setVisibility(View.VISIBLE);
                     } else if ("LEAVE".equals(status)) {
                         if (item.record.isFullDayLeave()) {
-                            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
-                            holder.tvDayNum.getBackground().setTint(leaveColor);
+                            applyStatusBackground(holder, leaveColor, item.isToday);
                             holder.tvDayNum.setTextColor(Color.WHITE);
                             holder.tvDayInfo.setText("假");
                             holder.tvDayInfo.setVisibility(View.VISIBLE);
                         } else {
-                            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
-                            holder.tvDayNum.getBackground().setTint(workColor);
+                            applyStatusBackground(holder, workColor, item.isToday);
                             holder.tvDayNum.setTextColor(Color.WHITE);
                             String info = String.format(java.util.Locale.getDefault(), "%.0fh+%.0fh",
                                     item.record.getWorkHours(), item.record.getOvertimeHours());
@@ -136,6 +135,38 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                 listener.onDayClick(item.date, item.isCurrentMonth);
             }
         });
+    }
+
+    private LayerDrawable createTodayDotBackground(android.content.Context context, int statusColor) {
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        circle.setColor(statusColor);
+
+        GradientDrawable dot = new GradientDrawable();
+        dot.setShape(GradientDrawable.OVAL);
+        dot.setColor(Color.WHITE);
+
+        LayerDrawable layer = new LayerDrawable(new GradientDrawable[]{circle, dot});
+
+        int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, context.getResources().getDisplayMetrics());
+        int dotSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, context.getResources().getDisplayMetrics());
+        int bottomMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, context.getResources().getDisplayMetrics());
+
+        int insetHorizontal = (viewSize - dotSize) / 2;
+        int insetTop = viewSize - dotSize - bottomMargin;
+        int insetBottom = bottomMargin;
+
+        layer.setLayerInset(1, insetHorizontal, insetTop, insetHorizontal, insetBottom);
+        return layer;
+    }
+
+    private void applyStatusBackground(DayViewHolder holder, int color, boolean isToday) {
+        if (isToday) {
+            holder.tvDayNum.setBackground(createTodayDotBackground(holder.itemView.getContext(), color));
+        } else {
+            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+            holder.tvDayNum.getBackground().setTint(color);
+        }
     }
 
     @Override
