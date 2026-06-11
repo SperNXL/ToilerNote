@@ -118,7 +118,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         // Actions
         binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
         binding.btnSave.setOnClickListener(v -> save(false));
-        binding.btnSaveAndContinue.setOnClickListener(v -> save(true));
+//        binding.btnSaveAndContinue.setOnClickListener(v -> save(true));
     }
 
     @Override
