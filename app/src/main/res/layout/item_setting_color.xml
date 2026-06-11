@@ -32,7 +32,7 @@
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginEnd="4dp"
-        android:background="@drawable/bg_circle_work"
+        android:background="@drawable/bg_rectangle_work"
         tools:backgroundTint="#6366F1" />
 
     <TextView

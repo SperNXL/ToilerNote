@@ -3,7 +3,6 @@ package com.toilernote.adapter;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,7 +110,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                         }
                     }
                 } else if (item.isRestDay) {
-                    holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+                    holder.tvDayNum.setBackgroundResource(R.drawable.bg_rectangle_work);
                     holder.tvDayNum.getBackground().setTint(restColor);
                     holder.tvDayNum.setTextColor(Color.WHITE);
                     holder.tvDayInfo.setText("休");
@@ -137,23 +136,31 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
         });
     }
 
-    private LayerDrawable createTodayDotBackground(android.content.Context context, int statusColor) {
-        GradientDrawable circle = new GradientDrawable();
-        circle.setShape(GradientDrawable.OVAL);
-        circle.setColor(statusColor);
+    private LayerDrawable createTodayDotBackground(android.content.Context context, int statusColor, int viewWidth) {
+        float density = context.getResources().getDisplayMetrics().density;
+        int corner = (int) (8 * density);
+        int lineWidth = (int) (8 * density);
+        int lineHeight = (int) (3 * density);
 
-        GradientDrawable dot = new GradientDrawable();
-        dot.setShape(GradientDrawable.OVAL);
-        dot.setColor(Color.WHITE);
+        GradientDrawable rect = new GradientDrawable();
+        rect.setShape(GradientDrawable.RECTANGLE);
+        rect.setCornerRadius(corner);
+        rect.setColor(statusColor);
 
-        LayerDrawable layer = new LayerDrawable(new GradientDrawable[]{circle, dot});
+        // 用小圆角矩形代替 LINE，确保在 RECTANGLE 内正确显示
+        GradientDrawable line = new GradientDrawable();
+        line.setShape(GradientDrawable.RECTANGLE);
+        line.setCornerRadius(lineHeight / 2f);
+        line.setColor(Color.WHITE);
+        line.setSize(lineWidth, lineHeight);
 
-        int viewSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, context.getResources().getDisplayMetrics());
-        int dotSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, context.getResources().getDisplayMetrics());
-        int bottomMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, context.getResources().getDisplayMetrics());
+        LayerDrawable layer = new LayerDrawable(new GradientDrawable[]{rect, line});
 
-        int insetHorizontal = (viewSize - dotSize) / 2;
-        int insetTop = viewSize - dotSize - bottomMargin;
+        int viewHeight = (int) (32 * density);
+        int bottomMargin = (int) (4 * density);
+
+        int insetHorizontal = (viewWidth - lineWidth) / 2;
+        int insetTop = viewHeight - lineHeight - bottomMargin;
         int insetBottom = bottomMargin;
 
         layer.setLayerInset(1, insetHorizontal, insetTop, insetHorizontal, insetBottom);
@@ -162,9 +169,20 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
 
     private void applyStatusBackground(DayViewHolder holder, int color, boolean isToday) {
         if (isToday) {
-            holder.tvDayNum.setBackground(createTodayDotBackground(holder.itemView.getContext(), color));
+            int viewWidth = holder.tvDayNum.getWidth();
+            if (viewWidth > 0) {
+                holder.tvDayNum.setBackground(createTodayDotBackground(holder.itemView.getContext(), color, viewWidth));
+            } else {
+                // View 尚未测量完成，布局完成后重新设置背景
+                holder.tvDayNum.post(() -> {
+                    int w = holder.tvDayNum.getWidth();
+                    if (w > 0) {
+                        holder.tvDayNum.setBackground(createTodayDotBackground(holder.itemView.getContext(), color, w));
+                    }
+                });
+            }
         } else {
-            holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_work);
+            holder.tvDayNum.setBackgroundResource(R.drawable.bg_rectangle_work);
             holder.tvDayNum.getBackground().setTint(color);
         }
     }
