@@ -32,6 +32,16 @@ public class WorkHoursCalculator {
             nightBreak = TimeUtils.parseBreakDuration(pref.getDefaultNightBreak());
         }
 
+        // 获取午休时间段（优先使用用户配置的实际午休时间）
+        int midBreakStart, midBreakEnd;
+        if (pref.getMidBreakStart() != null && pref.getMidBreakEnd() != null) {
+            midBreakStart = TimeUtils.timeToMinutes(pref.getMidBreakStart());
+            midBreakEnd = TimeUtils.timeToMinutes(pref.getMidBreakEnd());
+        } else {
+            midBreakStart = plannedStartMin + (plannedEndMin - plannedStartMin) / 2 - midBreak / 2;
+            midBreakEnd = midBreakStart + midBreak;
+        }
+
         // Late check
         record.setLate(actualStartMin > plannedStartMin);
 
@@ -49,22 +59,26 @@ public class WorkHoursCalculator {
                 int leaveStartMin = TimeUtils.timeToMinutes(record.getLeaveStart());
                 int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
                 int leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
-                int baseWorkMin = plannedEndMin - plannedStartMin - midBreak - leaveDuration;
+                // 只扣除不在请假时间内的午休
+                int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+                int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak - leaveDuration;
                 record.setWorkHours(Math.max(0, baseWorkMin / 60.0));
                 record.setOvertimeHours(0);
                 record.setLate(false);
             } else {
                 // 非全天请假：按正常上班逻辑计算，扣除请假时间段
-                int baseWorkMin = plannedEndMin - plannedStartMin - midBreak;
-                int actualWorkMin = actualEndMin - actualStartMin - midBreak;
-
+                int leaveStartMin = 0, leaveEndMin = 0;
                 int leaveDuration = 0;
                 if (record.getLeaveStart() != null && record.getLeaveEnd() != null) {
-                    int leaveStartMin = TimeUtils.timeToMinutes(record.getLeaveStart());
-                    int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
+                    leaveStartMin = TimeUtils.timeToMinutes(record.getLeaveStart());
+                    leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
                     leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
-                    actualWorkMin = Math.max(0, actualWorkMin - leaveDuration);
                 }
+
+                // 只扣除不在请假时间内的午休，避免重复扣减
+                int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+                int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak;
+                int actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
 
                 record.setLate(actualStartMin > plannedStartMin);
 
@@ -89,7 +103,9 @@ public class WorkHoursCalculator {
             int leaveStartMin = TimeUtils.timeToMinutes(record.getLeaveStart());
             int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
             leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
-            actualWorkMin = Math.max(0, actualWorkMin - leaveDuration);
+            // 只扣除不在请假时间内的午休
+            int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+            actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
         }
 
         if (actualWorkMin > baseWorkMin) {
@@ -100,5 +116,18 @@ public class WorkHoursCalculator {
             record.setWorkHours(Math.max(0, actualWorkMin / 60.0));
             record.setOvertimeHours(0);
         }
+    }
+
+    /**
+     * 计算有效午休时间（扣除与请假时间重叠的部分）
+     * 假设午休位于工作时间的中间段
+     */
+    private static int getEffectiveBreak(int midBreakStart, int midBreakEnd, int midBreak,
+                                         int leaveStartMin, int leaveEndMin) {
+        if (leaveStartMin <= 0 && leaveEndMin <= 0) {
+            return midBreak;
+        }
+        int overlap = Math.max(0, Math.min(midBreakEnd, leaveEndMin) - Math.max(midBreakStart, leaveStartMin));
+        return Math.max(0, midBreak - overlap);
     }
 }
