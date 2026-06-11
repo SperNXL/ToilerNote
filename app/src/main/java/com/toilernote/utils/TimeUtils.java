@@ -29,6 +29,11 @@ public class TimeUtils {
         return String.format(Locale.getDefault(), "%02d:%02d", h, m);
     }
 
+    public static String formatTruncatedHours(double hours) {
+        double truncated = Math.floor(hours * 10) / 10.0;
+        return String.format(Locale.getDefault(), "%.1f", truncated);
+    }
+
     public static int parseBreakDuration(String breakRange) {
         if (breakRange == null || !breakRange.contains("-")) return 0;
         String[] parts = breakRange.split("-");

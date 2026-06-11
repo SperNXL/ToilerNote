@@ -172,10 +172,10 @@ public class AttendanceFragment extends Fragment {
         binding.statWorkDays.tvStatValue.setText(String.valueOf(stats.getWorkDays()));
 
         binding.statWorkHours.tvStatLabel.setText("工时合计");
-        binding.statWorkHours.tvStatValue.setText(String.format(java.util.Locale.getDefault(), "%.1fh", stats.getTotalWorkHours()));
+        binding.statWorkHours.tvStatValue.setText(TimeUtils.formatTruncatedHours(stats.getTotalWorkHours()));
 
         binding.statOvertime.tvStatLabel.setText("加班时长");
-        binding.statOvertime.tvStatValue.setText(String.format(java.util.Locale.getDefault(), "%.1fh", stats.getTotalOvertimeHours()));
+        binding.statOvertime.tvStatValue.setText(TimeUtils.formatTruncatedHours(stats.getTotalOvertimeHours()));
 
         binding.statLeaveDays.tvStatLabel.setText("请假次数");
         binding.statLeaveDays.tvStatValue.setText(String.valueOf(stats.getLeaveCount()));

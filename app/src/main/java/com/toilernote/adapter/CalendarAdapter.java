@@ -78,8 +78,8 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                     if ("WORK".equals(status)) {
                         applyStatusBackground(holder, workColor, item.isToday);
                         holder.tvDayNum.setTextColor(Color.WHITE);
-                        String info = String.format(java.util.Locale.getDefault(), "%.0fh+%.0fh",
-                                item.record.getWorkHours(), item.record.getOvertimeHours());
+                        String info = TimeUtils.formatTruncatedHours(item.record.getWorkHours()) + "+"
+                                + TimeUtils.formatTruncatedHours(item.record.getOvertimeHours());
                         holder.tvDayInfo.setText(info);
                         holder.tvDayInfo.setVisibility(View.VISIBLE);
                         if (item.record.isLate()) {
@@ -100,8 +100,8 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                         } else {
                             applyStatusBackground(holder, workColor, item.isToday);
                             holder.tvDayNum.setTextColor(Color.WHITE);
-                            String info = String.format(java.util.Locale.getDefault(), "%.0fh+%.0fh",
-                                    item.record.getWorkHours(), item.record.getOvertimeHours());
+                            String info = TimeUtils.formatTruncatedHours(item.record.getWorkHours()) + "+"
+                                    + TimeUtils.formatTruncatedHours(item.record.getOvertimeHours());
                             holder.tvDayInfo.setText(info);
                             holder.tvDayInfo.setVisibility(View.VISIBLE);
                             if (item.record.isLate()) {
