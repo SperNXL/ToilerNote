@@ -73,6 +73,9 @@ public class UserPreference {
     }
 
     public String getDefaultMidBreak() {
+        if (midBreakStart != null && midBreakEnd != null) {
+            return midBreakStart + "-" + midBreakEnd;
+        }
         return defaultMidBreak;
     }
 
@@ -81,6 +84,9 @@ public class UserPreference {
     }
 
     public String getDefaultNightBreak() {
+        if (nightBreakStart != null && nightBreakEnd != null) {
+            return nightBreakStart + "-" + nightBreakEnd;
+        }
         return defaultNightBreak;
     }
 
