@@ -3,6 +3,7 @@ package com.toilernote.ui;
 import android.app.Dialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,7 +14,10 @@ import android.view.Window;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
+
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -24,7 +28,6 @@ import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.utils.TimeUtils;
 import com.toilernote.utils.WorkHoursCalculator;
-import com.toilernote.viewmodel.CalendarViewModel;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -63,6 +66,15 @@ public class RecordEditDialogFragment extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         date = getArguments() != null ? getArguments().getString(ARG_DATE) : "";
+
+        // 使用 Window Insets API 处理键盘弹出（兼容 targetSdk 36）
+        int topPadding = view.getPaddingTop(); // 保留布局自身的 paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, windowInsets) -> {
+            Insets imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
+            // 键盘高度作为底部 padding，让整个页面上移
+            v.setPadding(0, topPadding, 0, imeInsets.bottom);
+            return windowInsets;
+        });
 
         // Load title
         Calendar cal = Calendar.getInstance();
@@ -119,6 +131,23 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
         binding.btnSave.setOnClickListener(v -> save(false));
 //        binding.btnSaveAndContinue.setOnClickListener(v -> save(true));
+
+        // 对会弹出键盘的输入框设置焦点监听，自动滚动到可见位置
+        View.OnFocusChangeListener scrollOnFocus = (v, hasFocus) -> {
+            if (hasFocus) {
+                binding.scrollContent.postDelayed(() -> {
+                    if (binding == null) return;
+                    Rect focusRect = new Rect();
+                    v.getDrawingRect(focusRect);
+                    binding.scrollContent.offsetDescendantRectToMyCoords(v, focusRect);
+                    binding.scrollContent.requestChildRectangleOnScreen(
+                            binding.scrollContent.getChildAt(0), focusRect, false);
+                }, 300);
+            }
+        };
+        binding.etMidBreak.setOnFocusChangeListener(scrollOnFocus);
+        binding.etNightBreak.setOnFocusChangeListener(scrollOnFocus);
+        binding.etRemark.setOnFocusChangeListener(scrollOnFocus);
     }
 
     @Override
@@ -131,8 +160,9 @@ public class RecordEditDialogFragment extends DialogFragment {
                 window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                 window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 window.setWindowAnimations(R.style.DialogAnimation);
-                window.getDecorView().setPadding(0, 130, 0, 0);
             }
+            // 确保 Window Insets 被分发
+            ViewCompat.requestApplyInsets(dialog.getWindow().getDecorView());
         }
     }
 

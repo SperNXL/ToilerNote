@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_bottom_sheet"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="40dp">
 
     <!-- Drag Handle -->
     <View
@@ -50,6 +51,7 @@
 
     <!-- Scrollable Content -->
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
