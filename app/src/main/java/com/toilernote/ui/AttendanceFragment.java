@@ -54,6 +54,26 @@ public class AttendanceFragment extends Fragment {
         binding.recyclerCalendar.setAdapter(adapter);
         binding.recyclerCalendar.setNestedScrollingEnabled(false);
 
+        // 修改 GridLayoutManager 将余数像素分配给前几列，导致后几列偏窄
+        // 动态调整 padding 使内容宽度能被 7 整除，保证所有列等宽
+        binding.recyclerCalendar.post(() -> {
+            int contentWidth = binding.recyclerCalendar.getWidth()
+                    - binding.recyclerCalendar.getPaddingLeft()
+                    - binding.recyclerCalendar.getPaddingRight();
+            int remainder = contentWidth % 7;
+            if (remainder != 0) {
+                int extraLeft = remainder / 2;
+                int extraRight = remainder - extraLeft;
+                binding.recyclerCalendar.setPadding(
+                        binding.recyclerCalendar.getPaddingLeft() + extraLeft,
+                        binding.recyclerCalendar.getPaddingTop(),
+                        binding.recyclerCalendar.getPaddingRight() + extraRight,
+                        binding.recyclerCalendar.getPaddingBottom()
+                );
+                binding.recyclerCalendar.setClipToPadding(false);
+            }
+        });
+
         adapter.setOnDayClickListener((date, isCurrentMonth) -> {
             if (isCurrentMonth) {
                 openEditSheet(date);

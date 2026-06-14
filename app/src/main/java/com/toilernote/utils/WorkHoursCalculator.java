@@ -22,6 +22,7 @@ public class WorkHoursCalculator {
                 record.getPlannedEnd() != null ? record.getPlannedEnd() : pref.getDefaultWorkEnd());
         int actualStartMin = TimeUtils.timeToMinutes(record.getActualStart());
         int actualEndMin = TimeUtils.timeToMinutes(record.getActualEnd());
+        int effectiveActualStartMin = Math.max(actualStartMin, plannedStartMin);
 
         BreakInfo midBreak = resolveMidBreak(record, pref, plannedStartMin, plannedEndMin);
         BreakInfo nightBreak = resolveNightBreak(record, pref, plannedStartMin, plannedEndMin,
@@ -31,9 +32,9 @@ public class WorkHoursCalculator {
         record.setLate(actualStartMin > plannedStartMin);
 
         if (record.isFullDayOvertime()) {
-            // Full day overtime
+            // Full day overtime：早到部分不计入加班
             record.setWorkHours(0);
-            int overtimeMin = actualEndMin - actualStartMin - midBreak.duration;
+            int overtimeMin = actualEndMin - effectiveActualStartMin - midBreak.duration;
             record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
             return;
         }
@@ -63,7 +64,7 @@ public class WorkHoursCalculator {
                 // 只扣除不在请假时间内的午休，避免重复扣减
                 int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
                 int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak;
-                int actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
+                int actualWorkMin = actualEndMin - effectiveActualStartMin - effectiveMidBreak - leaveDuration;
 
                 record.setLate(actualStartMin > plannedStartMin);
 
@@ -81,7 +82,7 @@ public class WorkHoursCalculator {
 
         // Normal work day
         int baseWorkMin = plannedEndMin - plannedStartMin - midBreak.duration;
-        int actualWorkMin = actualEndMin - actualStartMin - midBreak.duration;
+        int actualWorkMin = actualEndMin - effectiveActualStartMin - midBreak.duration;
 
         int leaveDuration = 0;
         if (record.getLeaveStart() != null && record.getLeaveEnd() != null) {
@@ -90,7 +91,7 @@ public class WorkHoursCalculator {
             leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
             // 只扣除不在请假时间内的午休
             int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
-            actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
+            actualWorkMin = actualEndMin - effectiveActualStartMin - effectiveMidBreak - leaveDuration;
         }
 
         if (actualWorkMin > baseWorkMin) {
