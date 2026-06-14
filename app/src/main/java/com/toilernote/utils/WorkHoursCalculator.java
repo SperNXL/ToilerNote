@@ -23,24 +23,9 @@ public class WorkHoursCalculator {
         int actualStartMin = TimeUtils.timeToMinutes(record.getActualStart());
         int actualEndMin = TimeUtils.timeToMinutes(record.getActualEnd());
 
-        int midBreak = record.getMidBreakMinutes();
-        if (midBreak <= 0) {
-            midBreak = TimeUtils.parseBreakDuration(pref.getDefaultMidBreak());
-        }
-        int nightBreak = record.getNightBreakMinutes();
-        if (nightBreak <= 0 && !record.isFullDayOvertime()) {
-            nightBreak = TimeUtils.parseBreakDuration(pref.getDefaultNightBreak());
-        }
-
-        // 获取午休时间段（优先使用用户配置的实际午休时间）
-        int midBreakStart, midBreakEnd;
-        if (pref.getMidBreakStart() != null && pref.getMidBreakEnd() != null) {
-            midBreakStart = TimeUtils.timeToMinutes(pref.getMidBreakStart());
-            midBreakEnd = TimeUtils.timeToMinutes(pref.getMidBreakEnd());
-        } else {
-            midBreakStart = plannedStartMin + (plannedEndMin - plannedStartMin) / 2 - midBreak / 2;
-            midBreakEnd = midBreakStart + midBreak;
-        }
+        BreakInfo midBreak = resolveMidBreak(record, pref, plannedStartMin, plannedEndMin);
+        BreakInfo nightBreak = resolveNightBreak(record, pref, plannedStartMin, plannedEndMin,
+                record.isFullDayOvertime());
 
         // Late check
         record.setLate(actualStartMin > plannedStartMin);
@@ -48,7 +33,7 @@ public class WorkHoursCalculator {
         if (record.isFullDayOvertime()) {
             // Full day overtime
             record.setWorkHours(0);
-            int overtimeMin = actualEndMin - actualStartMin - midBreak;
+            int overtimeMin = actualEndMin - actualStartMin - midBreak.duration;
             record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
             return;
         }
@@ -60,7 +45,7 @@ public class WorkHoursCalculator {
                 int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
                 int leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
                 // 只扣除不在请假时间内的午休
-                int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+                int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
                 int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak - leaveDuration;
                 record.setWorkHours(Math.max(0, baseWorkMin / 60.0));
                 record.setOvertimeHours(0);
@@ -76,7 +61,7 @@ public class WorkHoursCalculator {
                 }
 
                 // 只扣除不在请假时间内的午休，避免重复扣减
-                int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+                int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
                 int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak;
                 int actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
 
@@ -84,7 +69,7 @@ public class WorkHoursCalculator {
 
                 if (actualWorkMin > baseWorkMin) {
                     record.setWorkHours(baseWorkMin / 60.0);
-                    int overtimeMin = actualWorkMin - baseWorkMin - nightBreak;
+                    int overtimeMin = actualWorkMin - baseWorkMin - nightBreak.duration;
                     record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
                 } else {
                     record.setWorkHours(Math.max(0, actualWorkMin / 60.0));
@@ -95,8 +80,8 @@ public class WorkHoursCalculator {
         }
 
         // Normal work day
-        int baseWorkMin = plannedEndMin - plannedStartMin - midBreak;
-        int actualWorkMin = actualEndMin - actualStartMin - midBreak;
+        int baseWorkMin = plannedEndMin - plannedStartMin - midBreak.duration;
+        int actualWorkMin = actualEndMin - actualStartMin - midBreak.duration;
 
         int leaveDuration = 0;
         if (record.getLeaveStart() != null && record.getLeaveEnd() != null) {
@@ -104,13 +89,13 @@ public class WorkHoursCalculator {
             int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
             leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
             // 只扣除不在请假时间内的午休
-            int effectiveMidBreak = getEffectiveBreak(midBreakStart, midBreakEnd, midBreak, leaveStartMin, leaveEndMin);
+            int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
             actualWorkMin = actualEndMin - actualStartMin - effectiveMidBreak - leaveDuration;
         }
 
         if (actualWorkMin > baseWorkMin) {
             record.setWorkHours(baseWorkMin / 60.0);
-            int overtimeMin = actualWorkMin - baseWorkMin - nightBreak;
+            int overtimeMin = actualWorkMin - baseWorkMin - nightBreak.duration;
             record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
         } else {
             record.setWorkHours(Math.max(0, actualWorkMin / 60.0));
@@ -118,16 +103,103 @@ public class WorkHoursCalculator {
         }
     }
 
+    public static BreakInfo resolveMidBreak(DailyRecord record, UserPreference pref,
+                                            int plannedStartMin, int plannedEndMin) {
+        // 1. 记录自定义了中间休息
+        if (record.isCustomMidBreak() && isValidRange(record.getMidBreakStart(), record.getMidBreakEnd())) {
+            return fromRange(record.getMidBreakStart(), record.getMidBreakEnd());
+        }
+        // 2. 旧数据：按分钟数视为自定义，从计划工作时间中点推算
+        if (!record.isCustomMidBreak() && record.getMidBreakMinutes() > 0) {
+            return fromDurationMidpoint(record.getMidBreakMinutes(), plannedStartMin, plannedEndMin);
+        }
+        // 3. 设置开启且有有效时间段
+        if (pref.isMidBreakEnabled() && isValidRange(pref.getMidBreakStart(), pref.getMidBreakEnd())) {
+            return fromRange(pref.getMidBreakStart(), pref.getMidBreakEnd());
+        }
+        // 4. 设置开启但无有效时间段：用默认时长从中点推算
+        if (pref.isMidBreakEnabled()) {
+            int duration = TimeUtils.parseBreakDuration(pref.getDefaultMidBreak());
+            if (duration > 0) {
+                return fromDurationMidpoint(duration, plannedStartMin, plannedEndMin);
+            }
+        }
+        // 5. 未启用
+        return new BreakInfo(0, 0, 0);
+    }
+
+    public static BreakInfo resolveNightBreak(DailyRecord record, UserPreference pref,
+                                              int plannedStartMin, int plannedEndMin,
+                                              boolean fullDayOvertime) {
+        // 全天加班不扣晚休
+        if (fullDayOvertime) {
+            return new BreakInfo(0, 0, 0);
+        }
+        // 1. 记录自定义了晚上休息
+        if (record.isCustomNightBreak() && isValidRange(record.getNightBreakStart(), record.getNightBreakEnd())) {
+            return fromRange(record.getNightBreakStart(), record.getNightBreakEnd());
+        }
+        // 2. 旧数据：按分钟数视为自定义，从计划工作时间中点推算
+        if (!record.isCustomNightBreak() && record.getNightBreakMinutes() > 0) {
+            return fromDurationMidpoint(record.getNightBreakMinutes(), plannedStartMin, plannedEndMin);
+        }
+        // 3. 设置开启且有有效时间段
+        if (pref.isNightBreakEnabled() && isValidRange(pref.getNightBreakStart(), pref.getNightBreakEnd())) {
+            return fromRange(pref.getNightBreakStart(), pref.getNightBreakEnd());
+        }
+        // 4. 设置开启但无有效时间段：用默认时长从中点推算
+        if (pref.isNightBreakEnabled()) {
+            int duration = TimeUtils.parseBreakDuration(pref.getDefaultNightBreak());
+            if (duration > 0) {
+                return fromDurationMidpoint(duration, plannedStartMin, plannedEndMin);
+            }
+        }
+        // 5. 未启用
+        return new BreakInfo(0, 0, 0);
+    }
+
+    private static boolean isValidRange(String start, String end) {
+        return start != null && !start.isEmpty()
+                && end != null && !end.isEmpty()
+                && start.contains(":")
+                && end.contains(":");
+    }
+
+    private static BreakInfo fromRange(String start, String end) {
+        int startMin = TimeUtils.timeToMinutes(start);
+        int endMin = TimeUtils.timeToMinutes(end);
+        return new BreakInfo(startMin, endMin, Math.max(0, endMin - startMin));
+    }
+
+    private static BreakInfo fromDurationMidpoint(int duration, int plannedStartMin, int plannedEndMin) {
+        int center = plannedStartMin + (plannedEndMin - plannedStartMin) / 2;
+        int start = center - duration / 2;
+        int end = start + duration;
+        return new BreakInfo(start, end, duration);
+    }
+
     /**
      * 计算有效午休时间（扣除与请假时间重叠的部分）
      * 假设午休位于工作时间的中间段
      */
-    private static int getEffectiveBreak(int midBreakStart, int midBreakEnd, int midBreak,
+    private static int getEffectiveBreak(int breakStart, int breakEnd, int breakDuration,
                                          int leaveStartMin, int leaveEndMin) {
         if (leaveStartMin <= 0 && leaveEndMin <= 0) {
-            return midBreak;
+            return breakDuration;
         }
-        int overlap = Math.max(0, Math.min(midBreakEnd, leaveEndMin) - Math.max(midBreakStart, leaveStartMin));
-        return Math.max(0, midBreak - overlap);
+        int overlap = Math.max(0, Math.min(breakEnd, leaveEndMin) - Math.max(breakStart, leaveStartMin));
+        return Math.max(0, breakDuration - overlap);
+    }
+
+    public static class BreakInfo {
+        public final int start;
+        public final int end;
+        public final int duration;
+
+        public BreakInfo(int start, int end, int duration) {
+            this.start = start;
+            this.end = end;
+            this.duration = duration;
+        }
     }
 }

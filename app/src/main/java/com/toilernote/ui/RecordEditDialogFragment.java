@@ -6,10 +6,13 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +22,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.toilernote.R;
@@ -108,11 +112,14 @@ public class RecordEditDialogFragment extends DialogFragment {
             if (!isChecked) {
                 resetPlannedTimeToDefaults();
             }
+            updateBreakSummary(true);
+            updateBreakSummary(false);
         });
 
         // Full day overtime switch
         binding.switchFullDayOvertime.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            binding.tilNightBreak.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+            // 全天加班不扣晚休，但由 WorkHoursCalculator 处理；UI 上无需隐藏
+            updateBreakSummary(false);
         });
 
         // Full day leave switch
@@ -136,6 +143,35 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.etLeaveStart.setOnClickListener(v -> showTimePicker(binding.etLeaveStart, "请假开始时间"));
         binding.etLeaveEnd.setOnClickListener(v -> showTimePicker(binding.etLeaveEnd, "请假结束时间"));
 
+        TextWatcher plannedTimeWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                updateBreakSummary(true);
+                updateBreakSummary(false);
+            }
+        };
+        binding.etPlannedStart.addTextChangedListener(plannedTimeWatcher);
+        binding.etPlannedEnd.addTextChangedListener(plannedTimeWatcher);
+
+        binding.etMidBreakStart.setOnClickListener(v -> showTimePicker(binding.etMidBreakStart, "中间休息开始"));
+        binding.etMidBreakEnd.setOnClickListener(v -> showTimePicker(binding.etMidBreakEnd, "中间休息结束"));
+        binding.etNightBreakStart.setOnClickListener(v -> showTimePicker(binding.etNightBreakStart, "晚上休息开始"));
+        binding.etNightBreakEnd.setOnClickListener(v -> showTimePicker(binding.etNightBreakEnd, "晚上休息结束"));
+
+        // Custom break switches
+        binding.switchCustomMidBreak.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateCustomBreakUi(true, isChecked);
+        });
+        binding.switchCustomNightBreak.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateCustomBreakUi(false, isChecked);
+        });
+
         // Actions
         binding.btnCopyYesterday.setOnClickListener(v -> copyYesterday());
         binding.btnSave.setOnClickListener(v -> save(false));
@@ -154,8 +190,6 @@ public class RecordEditDialogFragment extends DialogFragment {
                 }, 300);
             }
         };
-        binding.etMidBreak.setOnFocusChangeListener(scrollOnFocus);
-        binding.etNightBreak.setOnFocusChangeListener(scrollOnFocus);
         binding.etRemark.setOnFocusChangeListener(scrollOnFocus);
     }
 
@@ -201,8 +235,11 @@ public class RecordEditDialogFragment extends DialogFragment {
         updatePlannedTimeVisibility(false);
         binding.etActualStart.setText(preference.getDefaultWorkStart());
         binding.etActualEnd.setText(preference.getDefaultWorkEnd());
-        binding.etMidBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultMidBreak())));
-        binding.etNightBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultNightBreak())));
+        binding.switchCustomMidBreak.setChecked(false);
+        binding.switchCustomNightBreak.setChecked(false);
+        resetBreakPickersToDefaults();
+        updateCustomBreakUi(true, false);
+        updateCustomBreakUi(false, false);
         binding.switchFullDayOvertime.setChecked(false);
         binding.switchFullDayLeave.setChecked(true);
         binding.etRemark.setText("");
@@ -219,8 +256,25 @@ public class RecordEditDialogFragment extends DialogFragment {
         updatePlannedTimeVisibility(customPlanned);
         binding.etActualStart.setText(record.getActualStart() != null ? record.getActualStart() : preference.getDefaultWorkStart());
         binding.etActualEnd.setText(record.getActualEnd() != null ? record.getActualEnd() : preference.getDefaultWorkEnd());
-        binding.etMidBreak.setText(String.valueOf(record.getMidBreakMinutes()));
-        binding.etNightBreak.setText(String.valueOf(record.getNightBreakMinutes()));
+        boolean customMidBreak = shouldUseCustomMidBreak(record);
+        boolean customNightBreak = shouldUseCustomNightBreak(record);
+        binding.switchCustomMidBreak.setChecked(customMidBreak);
+        binding.switchCustomNightBreak.setChecked(customNightBreak);
+
+        int plannedStartMin = TimeUtils.timeToMinutes(getEffectivePlannedStart());
+        int plannedEndMin = TimeUtils.timeToMinutes(getEffectivePlannedEnd());
+        String[] midRange = resolveBreakRangeForBinding(record.isCustomMidBreak(), record.getMidBreakStart(),
+                record.getMidBreakEnd(), record.getMidBreakMinutes(), plannedStartMin, plannedEndMin,
+                preference.getMidBreakStart(), preference.getMidBreakEnd());
+        String[] nightRange = resolveBreakRangeForBinding(record.isCustomNightBreak(), record.getNightBreakStart(),
+                record.getNightBreakEnd(), record.getNightBreakMinutes(), plannedStartMin, plannedEndMin,
+                preference.getNightBreakStart(), preference.getNightBreakEnd());
+        binding.etMidBreakStart.setText(midRange[0]);
+        binding.etMidBreakEnd.setText(midRange[1]);
+        binding.etNightBreakStart.setText(nightRange[0]);
+        binding.etNightBreakEnd.setText(nightRange[1]);
+        updateCustomBreakUi(true, customMidBreak);
+        updateCustomBreakUi(false, customNightBreak);
         binding.switchFullDayOvertime.setChecked(record.isFullDayOvertime());
         binding.switchFullDayLeave.setChecked(record.isFullDayLeave());
         binding.etRemark.setText(record.getRemark() != null ? record.getRemark() : "");
@@ -292,6 +346,98 @@ public class RecordEditDialogFragment extends DialogFragment {
         return hasCustomStart || hasCustomEnd;
     }
 
+    private boolean shouldUseCustomMidBreak(DailyRecord record) {
+        if (record == null) return false;
+        if (record.isCustomMidBreak()) return true;
+        return record.getMidBreakMinutes() > 0;
+    }
+
+    private boolean shouldUseCustomNightBreak(DailyRecord record) {
+        if (record == null) return false;
+        if (record.isCustomNightBreak()) return true;
+        return record.getNightBreakMinutes() > 0;
+    }
+
+    private void resetBreakPickersToDefaults() {
+        if (preference == null) return;
+        binding.etMidBreakStart.setText(preference.getMidBreakStart());
+        binding.etMidBreakEnd.setText(preference.getMidBreakEnd());
+        binding.etNightBreakStart.setText(preference.getNightBreakStart());
+        binding.etNightBreakEnd.setText(preference.getNightBreakEnd());
+    }
+
+    private void updateCustomBreakUi(boolean isMid, boolean showCustom) {
+        if (isMid) {
+            binding.containerMidBreakPickers.setVisibility(showCustom ? View.VISIBLE : View.GONE);
+        } else {
+            binding.containerNightBreakPickers.setVisibility(showCustom ? View.VISIBLE : View.GONE);
+        }
+        updateBreakSummary(isMid);
+    }
+
+    private void updateBreakSummary(boolean isMid) {
+        if (preference == null) return;
+        TextView summaryView = isMid ? binding.tvMidBreakSummary : binding.tvNightBreakSummary;
+        SwitchMaterial switchView = isMid ? binding.switchCustomMidBreak : binding.switchCustomNightBreak;
+        if (switchView.isChecked()) {
+            summaryView.setVisibility(View.GONE);
+            return;
+        }
+
+        int plannedStartMin = TimeUtils.timeToMinutes(getEffectivePlannedStart());
+        int plannedEndMin = TimeUtils.timeToMinutes(getEffectivePlannedEnd());
+        DailyRecord temp = new DailyRecord();
+        temp.setCustomPlannedTime(binding.switchCustomPlannedTime.isChecked());
+        temp.setPlannedStart(binding.etPlannedStart.getText().toString());
+        temp.setPlannedEnd(binding.etPlannedEnd.getText().toString());
+
+        WorkHoursCalculator.BreakInfo info;
+        if (isMid) {
+            temp.setCustomMidBreak(false);
+            temp.setMidBreakMinutes(0);
+            info = WorkHoursCalculator.resolveMidBreak(temp, preference, plannedStartMin, plannedEndMin);
+        } else {
+            temp.setCustomNightBreak(false);
+            temp.setNightBreakMinutes(0);
+            info = WorkHoursCalculator.resolveNightBreak(temp, preference, plannedStartMin, plannedEndMin,
+                    binding.switchFullDayOvertime.isChecked());
+        }
+
+        if (info.duration <= 0) {
+            summaryView.setText(R.string.break_time_none);
+        } else {
+            String range = String.format(Locale.getDefault(), "%s-%s",
+                    TimeUtils.minutesToTime(info.start), TimeUtils.minutesToTime(info.end));
+            summaryView.setText(getString(R.string.break_time_summary, range));
+        }
+        summaryView.setVisibility(View.VISIBLE);
+    }
+
+    private String[] resolveBreakRangeForBinding(boolean isCustom, String recordStart, String recordEnd,
+                                                  int legacyMinutes, int plannedStartMin, int plannedEndMin,
+                                                  String prefStart, String prefEnd) {
+        if (isCustom && recordStart != null && recordEnd != null) {
+            return new String[]{recordStart, recordEnd};
+        }
+        if (legacyMinutes > 0) {
+            int center = plannedStartMin + (plannedEndMin - plannedStartMin) / 2;
+            int start = center - legacyMinutes / 2;
+            int end = start + legacyMinutes;
+            return new String[]{TimeUtils.minutesToTime(start), TimeUtils.minutesToTime(end)};
+        }
+        return new String[]{prefStart, prefEnd};
+    }
+
+    private String getEffectivePlannedStart() {
+        String text = binding.etPlannedStart.getText().toString();
+        return !text.isEmpty() ? text : (preference != null ? preference.getDefaultWorkStart() : null);
+    }
+
+    private String getEffectivePlannedEnd() {
+        String text = binding.etPlannedEnd.getText().toString();
+        return !text.isEmpty() ? text : (preference != null ? preference.getDefaultWorkEnd() : null);
+    }
+
     private void addTime(android.widget.EditText editText, int minutes) {
         String text = editText.getText().toString();
         int total = TimeUtils.timeToMinutes(text) + minutes;
@@ -336,8 +482,31 @@ public class RecordEditDialogFragment extends DialogFragment {
                 if (yesterdayRecord != null) {
                     binding.etActualStart.setText(yesterdayRecord.getActualStart());
                     binding.etActualEnd.setText(yesterdayRecord.getActualEnd());
-                    binding.etMidBreak.setText(String.valueOf(yesterdayRecord.getMidBreakMinutes()));
-                    binding.etNightBreak.setText(String.valueOf(yesterdayRecord.getNightBreakMinutes()));
+
+                    boolean customMid = shouldUseCustomMidBreak(yesterdayRecord);
+                    boolean customNight = shouldUseCustomNightBreak(yesterdayRecord);
+                    binding.switchCustomMidBreak.setChecked(customMid);
+                    binding.switchCustomNightBreak.setChecked(customNight);
+
+                    int yesterdayPlannedStartMin = TimeUtils.timeToMinutes(
+                            yesterdayRecord.getPlannedStart() != null ? yesterdayRecord.getPlannedStart() : preference.getDefaultWorkStart());
+                    int yesterdayPlannedEndMin = TimeUtils.timeToMinutes(
+                            yesterdayRecord.getPlannedEnd() != null ? yesterdayRecord.getPlannedEnd() : preference.getDefaultWorkEnd());
+                    String[] yesterdayMidRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomMidBreak(),
+                            yesterdayRecord.getMidBreakStart(), yesterdayRecord.getMidBreakEnd(),
+                            yesterdayRecord.getMidBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
+                            preference.getMidBreakStart(), preference.getMidBreakEnd());
+                    String[] yesterdayNightRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomNightBreak(),
+                            yesterdayRecord.getNightBreakStart(), yesterdayRecord.getNightBreakEnd(),
+                            yesterdayRecord.getNightBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
+                            preference.getNightBreakStart(), preference.getNightBreakEnd());
+                    binding.etMidBreakStart.setText(yesterdayMidRange[0]);
+                    binding.etMidBreakEnd.setText(yesterdayMidRange[1]);
+                    binding.etNightBreakStart.setText(yesterdayNightRange[0]);
+                    binding.etNightBreakEnd.setText(yesterdayNightRange[1]);
+                    updateCustomBreakUi(true, customMid);
+                    updateCustomBreakUi(false, customNight);
+
                     binding.switchFullDayOvertime.setChecked(yesterdayRecord.isFullDayOvertime());
                     binding.etRemark.setText("");
                     setStatus(yesterdayRecord.getStatus());
@@ -356,8 +525,14 @@ public class RecordEditDialogFragment extends DialogFragment {
         record.setPlannedEnd(customPlanned ? binding.etPlannedEnd.getText().toString() : null);
         record.setActualStart(binding.etActualStart.getText().toString());
         record.setActualEnd(binding.etActualEnd.getText().toString());
-        record.setMidBreakMinutes(parseInt(binding.etMidBreak.getText().toString()));
-        record.setNightBreakMinutes(parseInt(binding.etNightBreak.getText().toString()));
+        boolean customMidBreak = binding.switchCustomMidBreak.isChecked();
+        boolean customNightBreak = binding.switchCustomNightBreak.isChecked();
+        record.setCustomMidBreak(customMidBreak);
+        record.setMidBreakStart(customMidBreak ? binding.etMidBreakStart.getText().toString() : null);
+        record.setMidBreakEnd(customMidBreak ? binding.etMidBreakEnd.getText().toString() : null);
+        record.setCustomNightBreak(customNightBreak);
+        record.setNightBreakStart(customNightBreak ? binding.etNightBreakStart.getText().toString() : null);
+        record.setNightBreakEnd(customNightBreak ? binding.etNightBreakEnd.getText().toString() : null);
         record.setFullDayOvertime(binding.switchFullDayOvertime.isChecked());
         record.setFullDayLeave(binding.switchFullDayLeave.isChecked());
         record.setRemark(binding.etRemark.getText().toString());

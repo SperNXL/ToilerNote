@@ -25,10 +25,14 @@
     <string name="overtime_1h">+1h</string>
     <string name="overtime_2h">+2h</string>
     <string name="overtime_3h">+3h</string>
-    <string name="mid_break_minutes">中间休息 (分)</string>
-    <string name="night_break_minutes">晚上休息 (分)</string>
+    <string name="mid_break">中间休息</string>
+    <string name="night_break">晚上休息</string>
+    <string name="break_time_none">未启用</string>
+    <string name="break_time_summary">跟随设置：%s</string>
     <string name="leave_start">请假开始</string>
     <string name="leave_end">请假结束</string>
+    <string name="break_start">休息开始</string>
+    <string name="break_end">休息结束</string>
     <string name="remark">备注</string>
     <string name="copy_yesterday">复制昨日</string>
     <string name="save_and_continue">保存并继续</string>

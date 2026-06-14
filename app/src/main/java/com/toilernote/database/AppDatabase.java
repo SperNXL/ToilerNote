@@ -14,7 +14,7 @@ import com.toilernote.dao.UserPreferenceDao;
 import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 
-@Database(entities = {DailyRecord.class, UserPreference.class}, version = 5, exportSchema = false)
+@Database(entities = {DailyRecord.class, UserPreference.class}, version = 6, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
@@ -23,6 +23,18 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE daily_records ADD COLUMN customPlannedTime INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
+    private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN customMidBreak INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN midBreakStart TEXT");
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN midBreakEnd TEXT");
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN customNightBreak INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN nightBreakStart TEXT");
+            database.execSQL("ALTER TABLE daily_records ADD COLUMN nightBreakEnd TEXT");
         }
     };
 
@@ -37,7 +49,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             context.getApplicationContext(),
                             AppDatabase.class,
                             "toiler_note_db"
-                    ).addMigrations(MIGRATION_4_5)
+                    ).addMigrations(MIGRATION_4_5, MIGRATION_5_6)
                     .fallbackToDestructiveMigration().build();
                 }
             }

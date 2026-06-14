@@ -22,6 +22,12 @@ public class DailyRecord {
     private String actualEnd;
     private int midBreakMinutes;
     private int nightBreakMinutes;
+    private boolean customMidBreak;
+    private String midBreakStart;
+    private String midBreakEnd;
+    private boolean customNightBreak;
+    private String nightBreakStart;
+    private String nightBreakEnd;
     private String leaveStart;
     private String leaveEnd;
     private double workHours;
@@ -125,6 +131,54 @@ public class DailyRecord {
 
     public void setNightBreakMinutes(int nightBreakMinutes) {
         this.nightBreakMinutes = nightBreakMinutes;
+    }
+
+    public boolean isCustomMidBreak() {
+        return customMidBreak;
+    }
+
+    public void setCustomMidBreak(boolean customMidBreak) {
+        this.customMidBreak = customMidBreak;
+    }
+
+    public String getMidBreakStart() {
+        return midBreakStart;
+    }
+
+    public void setMidBreakStart(String midBreakStart) {
+        this.midBreakStart = midBreakStart;
+    }
+
+    public String getMidBreakEnd() {
+        return midBreakEnd;
+    }
+
+    public void setMidBreakEnd(String midBreakEnd) {
+        this.midBreakEnd = midBreakEnd;
+    }
+
+    public boolean isCustomNightBreak() {
+        return customNightBreak;
+    }
+
+    public void setCustomNightBreak(boolean customNightBreak) {
+        this.customNightBreak = customNightBreak;
+    }
+
+    public String getNightBreakStart() {
+        return nightBreakStart;
+    }
+
+    public void setNightBreakStart(String nightBreakStart) {
+        this.nightBreakStart = nightBreakStart;
+    }
+
+    public String getNightBreakEnd() {
+        return nightBreakEnd;
+    }
+
+    public void setNightBreakEnd(String nightBreakEnd) {
+        this.nightBreakEnd = nightBreakEnd;
     }
 
     public String getLeaveStart() {
