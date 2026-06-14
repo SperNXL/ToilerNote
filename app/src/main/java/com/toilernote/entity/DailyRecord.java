@@ -15,6 +15,7 @@ public class DailyRecord {
     private String status;
     private boolean isFullDayOvertime;
     private boolean isFullDayLeave;
+    private boolean customPlannedTime;
     private String plannedStart;
     private String actualStart;
     private String plannedEnd;
@@ -68,6 +69,14 @@ public class DailyRecord {
 
     public void setFullDayLeave(boolean fullDayLeave) {
         isFullDayLeave = fullDayLeave;
+    }
+
+    public boolean isCustomPlannedTime() {
+        return customPlannedTime;
+    }
+
+    public void setCustomPlannedTime(boolean customPlannedTime) {
+        this.customPlannedTime = customPlannedTime;
     }
 
     public String getPlannedStart() {

@@ -29,6 +29,7 @@ import com.toilernote.entity.UserPreference;
 import com.toilernote.utils.TimeUtils;
 import com.toilernote.utils.WorkHoursCalculator;
 
+
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -100,6 +101,14 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.tabWork.setOnClickListener(v -> setStatus("WORK"));
         binding.tabRest.setOnClickListener(v -> setStatus("REST"));
         binding.tabLeave.setOnClickListener(v -> setStatus("LEAVE"));
+
+        // Custom planned time switch
+        binding.switchCustomPlannedTime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updatePlannedTimeVisibility(isChecked);
+            if (!isChecked) {
+                resetPlannedTimeToDefaults();
+            }
+        });
 
         // Full day overtime switch
         binding.switchFullDayOvertime.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -186,8 +195,10 @@ public class RecordEditDialogFragment extends DialogFragment {
 
     private void bindDefaults() {
         if (preference == null) return;
+        binding.switchCustomPlannedTime.setChecked(false);
         binding.etPlannedStart.setText(preference.getDefaultWorkStart());
         binding.etPlannedEnd.setText(preference.getDefaultWorkEnd());
+        updatePlannedTimeVisibility(false);
         binding.etActualStart.setText(preference.getDefaultWorkStart());
         binding.etActualEnd.setText(preference.getDefaultWorkEnd());
         binding.etMidBreak.setText(String.valueOf(TimeUtils.parseBreakDuration(preference.getDefaultMidBreak())));
@@ -199,8 +210,13 @@ public class RecordEditDialogFragment extends DialogFragment {
     }
 
     private void bindRecord(DailyRecord record) {
-        binding.etPlannedStart.setText(record.getPlannedStart() != null ? record.getPlannedStart() : preference.getDefaultWorkStart());
-        binding.etPlannedEnd.setText(record.getPlannedEnd() != null ? record.getPlannedEnd() : preference.getDefaultWorkEnd());
+        boolean customPlanned = shouldUseCustomPlannedTime(record);
+        binding.switchCustomPlannedTime.setChecked(customPlanned);
+        binding.etPlannedStart.setText(customPlanned && record.getPlannedStart() != null
+                ? record.getPlannedStart() : preference.getDefaultWorkStart());
+        binding.etPlannedEnd.setText(customPlanned && record.getPlannedEnd() != null
+                ? record.getPlannedEnd() : preference.getDefaultWorkEnd());
+        updatePlannedTimeVisibility(customPlanned);
         binding.etActualStart.setText(record.getActualStart() != null ? record.getActualStart() : preference.getDefaultWorkStart());
         binding.etActualEnd.setText(record.getActualEnd() != null ? record.getActualEnd() : preference.getDefaultWorkEnd());
         binding.etMidBreak.setText(String.valueOf(record.getMidBreakMinutes()));
@@ -247,6 +263,33 @@ public class RecordEditDialogFragment extends DialogFragment {
             binding.workFormContainer.setVisibility(View.VISIBLE);
             binding.leaveTimeContainer.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void updatePlannedTimeVisibility(boolean showCustom) {
+        binding.tilPlannedStart.setVisibility(showCustom ? View.VISIBLE : View.GONE);
+        binding.tilPlannedEnd.setVisibility(showCustom ? View.VISIBLE : View.GONE);
+    }
+
+    private void resetPlannedTimeToDefaults() {
+        if (preference == null) return;
+        binding.etPlannedStart.setText(preference.getDefaultWorkStart());
+        binding.etPlannedEnd.setText(preference.getDefaultWorkEnd());
+    }
+
+    private boolean shouldUseCustomPlannedTime(DailyRecord record) {
+        if (record == null) return false;
+        // New field takes precedence
+        if (record.isCustomPlannedTime()) return true;
+        // Fallback for legacy records: treat non-default values as custom
+        String defaultStart = preference != null ? preference.getDefaultWorkStart() : null;
+        String defaultEnd = preference != null ? preference.getDefaultWorkEnd() : null;
+        boolean hasCustomStart = record.getPlannedStart() != null
+                && defaultStart != null
+                && !record.getPlannedStart().equals(defaultStart);
+        boolean hasCustomEnd = record.getPlannedEnd() != null
+                && defaultEnd != null
+                && !record.getPlannedEnd().equals(defaultEnd);
+        return hasCustomStart || hasCustomEnd;
     }
 
     private void addTime(android.widget.EditText editText, int minutes) {
@@ -307,8 +350,10 @@ public class RecordEditDialogFragment extends DialogFragment {
         DailyRecord record = existingRecord != null ? existingRecord : new DailyRecord(date, currentStatus);
         record.setDate(date);
         record.setStatus(currentStatus);
-        record.setPlannedStart(binding.etPlannedStart.getText().toString());
-        record.setPlannedEnd(binding.etPlannedEnd.getText().toString());
+        boolean customPlanned = binding.switchCustomPlannedTime.isChecked();
+        record.setCustomPlannedTime(customPlanned);
+        record.setPlannedStart(customPlanned ? binding.etPlannedStart.getText().toString() : null);
+        record.setPlannedEnd(customPlanned ? binding.etPlannedEnd.getText().toString() : null);
         record.setActualStart(binding.etActualStart.getText().toString());
         record.setActualEnd(binding.etActualEnd.getText().toString());
         record.setMidBreakMinutes(parseInt(binding.etMidBreak.getText().toString()));

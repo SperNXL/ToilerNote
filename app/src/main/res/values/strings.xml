@@ -12,6 +12,7 @@
     <string name="status_work">💼 上班</string>
     <string name="status_rest">🏖️ 休息</string>
     <string name="status_leave">🏥 请假</string>
+    <string name="custom_planned_time">自定义计划时间</string>
     <string name="full_day_overtime">全天加班</string>
     <string name="full_day_leave">全天请假</string>
     <string name="planned_start">计划上班</string>
