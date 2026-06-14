@@ -12,7 +12,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -438,6 +440,58 @@ public class RecordEditDialogFragment extends DialogFragment {
         return !text.isEmpty() ? text : (preference != null ? preference.getDefaultWorkEnd() : null);
     }
 
+    private boolean isTimeEmpty(EditText editText) {
+        return editText.getText() == null || editText.getText().toString().trim().isEmpty();
+    }
+
+    private boolean isValidTimeFormat(String time) {
+        return time != null && time.contains(":") && time.split(":").length == 2;
+    }
+
+    private String validateInputs() {
+        if ("REST".equals(currentStatus)) return null;
+
+        if (isTimeEmpty(binding.etActualStart) || isTimeEmpty(binding.etActualEnd)
+                || !isValidTimeFormat(binding.etActualStart.getText().toString())
+                || !isValidTimeFormat(binding.etActualEnd.getText().toString())) {
+            return "请填写有效的实际上下班时间";
+        }
+
+        if (binding.switchCustomPlannedTime.isChecked()) {
+            if (isTimeEmpty(binding.etPlannedStart) || isTimeEmpty(binding.etPlannedEnd)
+                    || !isValidTimeFormat(binding.etPlannedStart.getText().toString())
+                    || !isValidTimeFormat(binding.etPlannedEnd.getText().toString())) {
+                return "请填写有效的计划上下班时间";
+            }
+        }
+
+        if ("LEAVE".equals(currentStatus)) {
+            if (isTimeEmpty(binding.etLeaveStart) || isTimeEmpty(binding.etLeaveEnd)
+                    || !isValidTimeFormat(binding.etLeaveStart.getText().toString())
+                    || !isValidTimeFormat(binding.etLeaveEnd.getText().toString())) {
+                return "请填写有效的请假起止时间";
+            }
+        }
+
+        if (binding.switchCustomMidBreak.isChecked()) {
+            if (isTimeEmpty(binding.etMidBreakStart) || isTimeEmpty(binding.etMidBreakEnd)
+                    || !isValidTimeFormat(binding.etMidBreakStart.getText().toString())
+                    || !isValidTimeFormat(binding.etMidBreakEnd.getText().toString())) {
+                return "请填写有效的中间休息时间";
+            }
+        }
+
+        if (binding.switchCustomNightBreak.isChecked()) {
+            if (isTimeEmpty(binding.etNightBreakStart) || isTimeEmpty(binding.etNightBreakEnd)
+                    || !isValidTimeFormat(binding.etNightBreakStart.getText().toString())
+                    || !isValidTimeFormat(binding.etNightBreakEnd.getText().toString())) {
+                return "请填写有效的晚上休息时间";
+            }
+        }
+
+        return null;
+    }
+
     private void addTime(android.widget.EditText editText, int minutes) {
         String text = editText.getText().toString();
         int total = TimeUtils.timeToMinutes(text) + minutes;
@@ -516,6 +570,12 @@ public class RecordEditDialogFragment extends DialogFragment {
     }
 
     private void save(boolean andContinue) {
+        String error = validateInputs();
+        if (error != null) {
+            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         DailyRecord record = existingRecord != null ? existingRecord : new DailyRecord(date, currentStatus);
         record.setDate(date);
         record.setStatus(currentStatus);

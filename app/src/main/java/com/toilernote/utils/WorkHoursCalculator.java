@@ -22,6 +22,15 @@ public class WorkHoursCalculator {
                 record.getPlannedEnd() != null ? record.getPlannedEnd() : pref.getDefaultWorkEnd());
         int actualStartMin = TimeUtils.timeToMinutes(record.getActualStart());
         int actualEndMin = TimeUtils.timeToMinutes(record.getActualEnd());
+
+        // 防御：实际上下班时间无效时，不计算工时，避免产生负数或极大值
+        if (!isValidTime(record.getActualStart()) || !isValidTime(record.getActualEnd())) {
+            record.setWorkHours(0);
+            record.setOvertimeHours(0);
+            record.setLate(false);
+            return;
+        }
+
         int effectiveActualStartMin = Math.max(actualStartMin, plannedStartMin);
 
         BreakInfo midBreak = resolveMidBreak(record, pref, plannedStartMin, plannedEndMin);
@@ -160,10 +169,11 @@ public class WorkHoursCalculator {
     }
 
     private static boolean isValidRange(String start, String end) {
-        return start != null && !start.isEmpty()
-                && end != null && !end.isEmpty()
-                && start.contains(":")
-                && end.contains(":");
+        return isValidTime(start) && isValidTime(end);
+    }
+
+    private static boolean isValidTime(String time) {
+        return time != null && !time.trim().isEmpty() && time.contains(":");
     }
 
     private static BreakInfo fromRange(String start, String end) {
