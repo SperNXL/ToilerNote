@@ -29,6 +29,9 @@ public interface DailyRecordDao {
     @Query("SELECT * FROM daily_records WHERE date LIKE :monthPrefix || '%' ORDER BY date")
     LiveData<List<DailyRecord>> getRecordsByMonth(String monthPrefix);
 
+    @Query("SELECT * FROM daily_records WHERE date LIKE :monthPrefix || '%' ORDER BY date")
+    List<DailyRecord> getRecordsByMonthSync(String monthPrefix);
+
     @Query("SELECT * FROM daily_records ORDER BY date DESC")
     LiveData<List<DailyRecord>> getAllRecords();
 

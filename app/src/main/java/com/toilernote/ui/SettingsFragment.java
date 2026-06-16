@@ -209,6 +209,13 @@ public class SettingsFragment extends Fragment {
             Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
+        // Data Management
+        binding.itemRecalculateMonth.tvSettingIcon.setText("🔄");
+        binding.itemRecalculateMonth.tvSettingLabel.setText(R.string.recalculate_current_month);
+        binding.itemRecalculateMonth.tvSettingValue.setText("›");
+        binding.itemRecalculateMonth.tvSettingDesc.setVisibility(View.GONE);
+        binding.itemRecalculateMonth.getRoot().setOnClickListener(v -> showRecalculateConfirmDialog());
+
         // P1 placeholders (Data & Salary)
 //        bindP1Placeholder(binding.itemHourlyRate, "💰", "时薪设置",
 //                preference.getHourlyRate() != null
@@ -221,6 +228,20 @@ public class SettingsFragment extends Fragment {
 //        // Dark Mode (P1 placeholder)
 //        binding.btnDarkMode.setAlpha(0.5f);
 //        binding.btnDarkMode.setClickable(false);
+    }
+
+    private void showRecalculateConfirmDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.recalculate_current_month)
+                .setMessage(R.string.recalculate_confirm)
+                .setPositiveButton("确定", (dialog, which) -> {
+                    Toast.makeText(requireContext(), R.string.recalculate_in_progress, Toast.LENGTH_SHORT).show();
+                    viewModel.recalculateCurrentMonth(() ->
+                            requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(requireContext(), R.string.recalculate_complete, Toast.LENGTH_SHORT).show()));
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     private void bindP1Placeholder(com.toilernote.databinding.ItemSettingBinding itemBinding, String icon, String label, String value) {

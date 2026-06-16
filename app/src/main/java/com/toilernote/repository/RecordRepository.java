@@ -33,6 +33,10 @@ public class RecordRepository {
         AsyncTask.execute(() -> dailyRecordDao.update(record));
     }
 
+    public void updateRecordSync(DailyRecord record) {
+        dailyRecordDao.update(record);
+    }
+
     public DailyRecord getRecordByDate(String date) {
         return dailyRecordDao.getRecordByDate(date);
     }
@@ -43,6 +47,10 @@ public class RecordRepository {
 
     public LiveData<List<DailyRecord>> getRecordsByMonth(String monthPrefix) {
         return dailyRecordDao.getRecordsByMonth(monthPrefix);
+    }
+
+    public List<DailyRecord> getRecordsByMonthSync(String monthPrefix) {
+        return dailyRecordDao.getRecordsByMonthSync(monthPrefix);
     }
 
     public LiveData<List<DailyRecord>> getAllRecords() {
@@ -62,8 +70,16 @@ public class RecordRepository {
         AsyncTask.execute(() -> userPreferenceDao.insert(preference));
     }
 
+    public void insertPreferenceSync(UserPreference preference) {
+        userPreferenceDao.insert(preference);
+    }
+
     public void updatePreference(UserPreference preference) {
         AsyncTask.execute(() -> userPreferenceDao.update(preference));
+    }
+
+    public void updatePreferenceSync(UserPreference preference) {
+        userPreferenceDao.update(preference);
     }
 
     public UserPreference getPreference() {

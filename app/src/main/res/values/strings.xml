@@ -51,6 +51,11 @@
     <string name="default_time">默认时间</string>
     <string name="calendar_colors">日历颜色</string>
     <string name="data_and_salary">数据与薪资</string>
+    <string name="data_management">数据管理</string>
+    <string name="recalculate_current_month">重算当月</string>
+    <string name="recalculate_confirm">即将根据当前设置重新计算本月所有记录的工时与加班，是否继续？</string>
+    <string name="recalculate_in_progress">正在重算…</string>
+    <string name="recalculate_complete">重算完成</string>
     <string name="dark_mode">🌙 深色模式</string>
     <string name="data_insight">数据洞察与趋势分析</string>
     <string name="preference_data">偏好与数据管理</string>
