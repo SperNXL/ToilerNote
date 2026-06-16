@@ -34,16 +34,20 @@ public class WorkHoursCalculator {
         int effectiveActualStartMin = Math.max(actualStartMin, plannedStartMin);
 
         BreakInfo midBreak = resolveMidBreak(record, pref, plannedStartMin, plannedEndMin);
-        BreakInfo nightBreak = resolveNightBreak(record, pref, plannedStartMin, plannedEndMin,
-                record.isFullDayOvertime());
+        BreakInfo nightBreak = resolveNightBreak(record, pref, plannedStartMin, plannedEndMin);
 
         // Late check
         record.setLate(actualStartMin > plannedStartMin);
 
         if (record.isFullDayOvertime()) {
-            // Full day overtime：早到部分不计入加班
+            // Full day overtime：早到部分不计入加班；
+            // 只扣除与加班时段重叠的午休和晚休部分
             record.setWorkHours(0);
-            int overtimeMin = actualEndMin - effectiveActualStartMin - midBreak.duration;
+            int effectiveMidBreak = getBreakOverlap(midBreak.start, midBreak.end,
+                    effectiveActualStartMin, actualEndMin);
+            int effectiveNightBreak = getBreakOverlap(nightBreak.start, nightBreak.end,
+                    effectiveActualStartMin, actualEndMin);
+            int overtimeMin = actualEndMin - effectiveActualStartMin - effectiveMidBreak - effectiveNightBreak;
             record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
             return;
         }
@@ -139,12 +143,7 @@ public class WorkHoursCalculator {
     }
 
     public static BreakInfo resolveNightBreak(DailyRecord record, UserPreference pref,
-                                              int plannedStartMin, int plannedEndMin,
-                                              boolean fullDayOvertime) {
-        // 全天加班不扣晚休
-        if (fullDayOvertime) {
-            return new BreakInfo(0, 0, 0);
-        }
+                                              int plannedStartMin, int plannedEndMin) {
         // 1. 记录自定义了晚上休息
         if (record.isCustomNightBreak() && isValidRange(record.getNightBreakStart(), record.getNightBreakEnd())) {
             return fromRange(record.getNightBreakStart(), record.getNightBreakEnd());
@@ -190,6 +189,13 @@ public class WorkHoursCalculator {
     }
 
     /**
+     * 计算两个时间段的重叠分钟数
+     */
+    private static int getBreakOverlap(int breakStart, int breakEnd, int workStart, int workEnd) {
+        return Math.max(0, Math.min(breakEnd, workEnd) - Math.max(breakStart, workStart));
+    }
+
+    /**
      * 计算有效午休时间（扣除与请假时间重叠的部分）
      * 假设午休位于工作时间的中间段
      */
@@ -198,7 +204,7 @@ public class WorkHoursCalculator {
         if (leaveStartMin <= 0 && leaveEndMin <= 0) {
             return breakDuration;
         }
-        int overlap = Math.max(0, Math.min(breakEnd, leaveEndMin) - Math.max(breakStart, leaveStartMin));
+        int overlap = getBreakOverlap(breakStart, breakEnd, leaveStartMin, leaveEndMin);
         return Math.max(0, breakDuration - overlap);
     }
 

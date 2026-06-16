@@ -401,8 +401,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         } else {
             temp.setCustomNightBreak(false);
             temp.setNightBreakMinutes(0);
-            info = WorkHoursCalculator.resolveNightBreak(temp, preference, plannedStartMin, plannedEndMin,
-                    binding.switchFullDayOvertime.isChecked());
+            info = WorkHoursCalculator.resolveNightBreak(temp, preference, plannedStartMin, plannedEndMin);
         }
 
         if (info.duration <= 0) {
