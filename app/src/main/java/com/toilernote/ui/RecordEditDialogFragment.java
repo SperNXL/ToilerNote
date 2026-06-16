@@ -19,6 +19,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
+import androidx.lifecycle.ViewModelProvider;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -28,12 +32,12 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.toilernote.R;
-import com.toilernote.database.AppDatabase;
 import com.toilernote.databinding.DialogRecordEditBinding;
 import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.utils.TimeUtils;
 import com.toilernote.utils.WorkHoursCalculator;
+import com.toilernote.viewmodel.RecordEditViewModel;
 
 
 import java.util.Calendar;
@@ -43,9 +47,15 @@ public class RecordEditDialogFragment extends DialogFragment {
 
     private static final String ARG_DATE = "date";
     private DialogRecordEditBinding binding;
+    private RecordEditViewModel viewModel;
+    private MutableLiveData<String> currentDate = new MutableLiveData<>();
+    private LiveData<DailyRecord> currentRecord;
     private String date;
     private UserPreference preference;
     private DailyRecord existingRecord;
+    private boolean preferenceLoaded = false;
+    private boolean recordLoaded = false;
+    private boolean hasBound = false;
     private String currentStatus = "WORK";
 
     public static RecordEditDialogFragment newInstance(String date) {
@@ -83,25 +93,24 @@ public class RecordEditDialogFragment extends DialogFragment {
             return windowInsets;
         });
 
-        // Load title
-        Calendar cal = Calendar.getInstance();
-        try {
-            String[] parts = date.split("-");
-            int month = Integer.parseInt(parts[1]);
-            int day = Integer.parseInt(parts[2]);
-            cal.set(Integer.parseInt(parts[0]), month - 1, day);
-        } catch (Exception ignored) {
-        }
-        String[] weekdays = {"日", "一", "二", "三", "四", "五", "六"};
-        String title = String.format(Locale.getDefault(), "%d月%d日 周%s",
-                cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH),
-                weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]);
-        binding.tvSheetTitle.setText(title);
+        updateTitle();
 
         binding.btnCloseSheet.setOnClickListener(v -> dismiss());
 
-        // Load preference and record
-        loadData();
+        // Load preference and record via ViewModel
+        viewModel = new ViewModelProvider(this).get(RecordEditViewModel.class);
+        viewModel.getUserPreference().observe(getViewLifecycleOwner(), pref -> {
+            preference = pref != null ? pref : new UserPreference();
+            preferenceLoaded = true;
+            tryBindData();
+        });
+        currentDate.setValue(date);
+        currentRecord = Transformations.switchMap(currentDate, viewModel::getRecordByDate);
+        currentRecord.observe(getViewLifecycleOwner(), record -> {
+            existingRecord = record;
+            recordLoaded = true;
+            tryBindData();
+        });
 
         // Status tabs
         binding.tabWork.setOnClickListener(v -> setStatus("WORK"));
@@ -211,22 +220,30 @@ public class RecordEditDialogFragment extends DialogFragment {
         }
     }
 
-    private void loadData() {
-        new Thread(() -> {
-            preference = AppDatabase.getInstance(requireContext()).userPreferenceDao().getPreference();
-            if (preference == null) {
-                preference = new UserPreference();
-            }
-            existingRecord = AppDatabase.getInstance(requireContext()).dailyRecordDao().getRecordByDate(date);
+    private void updateTitle() {
+        Calendar cal = Calendar.getInstance();
+        try {
+            String[] parts = date.split("-");
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            cal.set(Integer.parseInt(parts[0]), month - 1, day);
+        } catch (Exception ignored) {
+        }
+        String[] weekdays = {"日", "一", "二", "三", "四", "五", "六"};
+        String title = String.format(Locale.getDefault(), "%d月%d日 周%s",
+                cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH),
+                weekdays[cal.get(Calendar.DAY_OF_WEEK) - 1]);
+        binding.tvSheetTitle.setText(title);
+    }
 
-            requireActivity().runOnUiThread(() -> {
-                if (existingRecord != null) {
-                    bindRecord(existingRecord);
-                } else {
-                    bindDefaults();
-                }
-            });
-        }).start();
+    private void tryBindData() {
+        if (!preferenceLoaded || !recordLoaded || hasBound) return;
+        hasBound = true;
+        if (existingRecord != null) {
+            bindRecord(existingRecord);
+        } else {
+            bindDefaults();
+        }
     }
 
     private void bindDefaults() {
@@ -529,43 +546,40 @@ public class RecordEditDialogFragment extends DialogFragment {
     private void copyYesterday() {
         String yesterday = TimeUtils.getYesterday(date);
         if (yesterday == null) return;
-        new Thread(() -> {
-            DailyRecord yesterdayRecord = AppDatabase.getInstance(requireContext()).dailyRecordDao().getRecordByDate(yesterday);
-            requireActivity().runOnUiThread(() -> {
-                if (yesterdayRecord != null) {
-                    binding.etActualStart.setText(yesterdayRecord.getActualStart());
-                    binding.etActualEnd.setText(yesterdayRecord.getActualEnd());
+        viewModel.getRecordByDateSync(yesterday, yesterdayRecord -> {
+            if (yesterdayRecord != null) {
+                binding.etActualStart.setText(yesterdayRecord.getActualStart());
+                binding.etActualEnd.setText(yesterdayRecord.getActualEnd());
 
-                    boolean customMid = shouldUseCustomMidBreak(yesterdayRecord);
-                    boolean customNight = shouldUseCustomNightBreak(yesterdayRecord);
-                    binding.switchCustomMidBreak.setChecked(customMid);
-                    binding.switchCustomNightBreak.setChecked(customNight);
+                boolean customMid = shouldUseCustomMidBreak(yesterdayRecord);
+                boolean customNight = shouldUseCustomNightBreak(yesterdayRecord);
+                binding.switchCustomMidBreak.setChecked(customMid);
+                binding.switchCustomNightBreak.setChecked(customNight);
 
-                    int yesterdayPlannedStartMin = TimeUtils.timeToMinutes(
-                            yesterdayRecord.getPlannedStart() != null ? yesterdayRecord.getPlannedStart() : preference.getDefaultWorkStart());
-                    int yesterdayPlannedEndMin = TimeUtils.timeToMinutes(
-                            yesterdayRecord.getPlannedEnd() != null ? yesterdayRecord.getPlannedEnd() : preference.getDefaultWorkEnd());
-                    String[] yesterdayMidRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomMidBreak(),
-                            yesterdayRecord.getMidBreakStart(), yesterdayRecord.getMidBreakEnd(),
-                            yesterdayRecord.getMidBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
-                            preference.getMidBreakStart(), preference.getMidBreakEnd());
-                    String[] yesterdayNightRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomNightBreak(),
-                            yesterdayRecord.getNightBreakStart(), yesterdayRecord.getNightBreakEnd(),
-                            yesterdayRecord.getNightBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
-                            preference.getNightBreakStart(), preference.getNightBreakEnd());
-                    binding.etMidBreakStart.setText(yesterdayMidRange[0]);
-                    binding.etMidBreakEnd.setText(yesterdayMidRange[1]);
-                    binding.etNightBreakStart.setText(yesterdayNightRange[0]);
-                    binding.etNightBreakEnd.setText(yesterdayNightRange[1]);
-                    updateCustomBreakUi(true, customMid);
-                    updateCustomBreakUi(false, customNight);
+                int yesterdayPlannedStartMin = TimeUtils.timeToMinutes(
+                        yesterdayRecord.getPlannedStart() != null ? yesterdayRecord.getPlannedStart() : preference.getDefaultWorkStart());
+                int yesterdayPlannedEndMin = TimeUtils.timeToMinutes(
+                        yesterdayRecord.getPlannedEnd() != null ? yesterdayRecord.getPlannedEnd() : preference.getDefaultWorkEnd());
+                String[] yesterdayMidRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomMidBreak(),
+                        yesterdayRecord.getMidBreakStart(), yesterdayRecord.getMidBreakEnd(),
+                        yesterdayRecord.getMidBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
+                        preference.getMidBreakStart(), preference.getMidBreakEnd());
+                String[] yesterdayNightRange = resolveBreakRangeForBinding(yesterdayRecord.isCustomNightBreak(),
+                        yesterdayRecord.getNightBreakStart(), yesterdayRecord.getNightBreakEnd(),
+                        yesterdayRecord.getNightBreakMinutes(), yesterdayPlannedStartMin, yesterdayPlannedEndMin,
+                        preference.getNightBreakStart(), preference.getNightBreakEnd());
+                binding.etMidBreakStart.setText(yesterdayMidRange[0]);
+                binding.etMidBreakEnd.setText(yesterdayMidRange[1]);
+                binding.etNightBreakStart.setText(yesterdayNightRange[0]);
+                binding.etNightBreakEnd.setText(yesterdayNightRange[1]);
+                updateCustomBreakUi(true, customMid);
+                updateCustomBreakUi(false, customNight);
 
-                    binding.switchFullDayOvertime.setChecked(yesterdayRecord.isFullDayOvertime());
-                    binding.etRemark.setText("");
-                    setStatus(yesterdayRecord.getStatus());
-                }
-            });
-        }).start();
+                binding.switchFullDayOvertime.setChecked(yesterdayRecord.isFullDayOvertime());
+                binding.etRemark.setText("");
+                setStatus(yesterdayRecord.getStatus());
+            }
+        });
     }
 
     private void save(boolean andContinue) {
@@ -608,16 +622,12 @@ public class RecordEditDialogFragment extends DialogFragment {
             WorkHoursCalculator.calculate(record, preference);
         }
 
-        new Thread(() -> {
-            AppDatabase.getInstance(requireContext()).dailyRecordDao().insert(record);
-            requireActivity().runOnUiThread(() -> {
-                if (andContinue) {
-                    moveToNextDay();
-                } else {
-                    dismiss();
-                }
-            });
-        }).start();
+        viewModel.saveRecord(record);
+        if (andContinue) {
+            moveToNextDay();
+        } else {
+            dismiss();
+        }
     }
 
     private void moveToNextDay() {
@@ -629,7 +639,10 @@ public class RecordEditDialogFragment extends DialogFragment {
             date = String.format(Locale.getDefault(), "%d-%02d-%02d",
                     cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             existingRecord = null;
-            loadData();
+            hasBound = false;
+            recordLoaded = false;
+            updateTitle();
+            currentDate.setValue(date);
         } catch (Exception e) {
             dismiss();
         }
