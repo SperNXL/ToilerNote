@@ -664,6 +664,10 @@
                     android:id="@+id/itemRecalculateMonth"
                     layout="@layout/item_setting" />
 
+                <include
+                    android:id="@+id/itemExportJson"
+                    layout="@layout/item_setting" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -712,10 +716,6 @@
 <!--                    android:layout_height="1dp"-->
 <!--                    android:layout_marginStart="60dp"-->
 <!--                    android:background="@color/divider" />-->
-
-<!--                <include-->
-<!--                    android:id="@+id/itemExportJson"-->
-<!--                    layout="@layout/item_setting" />-->
 
 <!--                <View-->
 <!--                    android:layout_width="match_parent"-->

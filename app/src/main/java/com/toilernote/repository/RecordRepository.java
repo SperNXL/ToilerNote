@@ -57,6 +57,18 @@ public class RecordRepository {
         return dailyRecordDao.getAllRecords();
     }
 
+    public List<DailyRecord> getAllRecordsSync() {
+        return dailyRecordDao.getAllRecordsSync();
+    }
+
+    public void insertAllRecordsSync(List<DailyRecord> records) {
+        dailyRecordDao.insertAll(records);
+    }
+
+    public void deleteAllRecordsSync() {
+        dailyRecordDao.deleteAll();
+    }
+
     public void deleteRecordsByMonth(String monthPrefix) {
         AsyncTask.execute(() -> dailyRecordDao.deleteRecordsByMonth(monthPrefix));
     }

@@ -3,6 +3,7 @@ package com.toilernote.ui;
 import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -14,15 +15,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.toilernote.R;
+import com.toilernote.databinding.DialogBackupBottomSheetBinding;
 import com.toilernote.databinding.FragmentSettingsBinding;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.viewmodel.SettingsViewModel;
@@ -56,6 +62,10 @@ public class SettingsFragment extends Fragment {
     private final List<View> leaveColorViews = new ArrayList<>();
     private final List<View> lateColorViews = new ArrayList<>();
 
+    private ActivityResultLauncher<String> createDocumentLauncher;
+    private ActivityResultLauncher<String[]> openDocumentLauncher;
+    private String pendingExportFileName;
+
     public SettingsFragment() {
     }
 
@@ -69,6 +79,31 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        createDocumentLauncher = registerForActivityResult(
+                new ActivityResultContracts.CreateDocument("application/json"),
+                uri -> {
+                    if (uri != null) {
+                        viewModel.exportData(uri, success -> requireActivity().runOnUiThread(() -> {
+                            String message = success
+                                    ? getString(R.string.export_success_with_name, pendingExportFileName)
+                                    : getString(R.string.export_failed);
+                            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        }));
+                    }
+                });
+
+        openDocumentLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri != null) {
+                        viewModel.importData(uri, success -> requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(),
+                                        success ? R.string.import_success : R.string.import_failed,
+                                        Toast.LENGTH_SHORT).show()));
+                    }
+                });
+
         viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
 
         viewModel.getUserPreference().observe(getViewLifecycleOwner(), pref -> {
@@ -212,7 +247,7 @@ public class SettingsFragment extends Fragment {
         // Data Management
         binding.itemRecalculateMonth.tvSettingIcon.setText("🔄");
         binding.itemRecalculateMonth.tvSettingLabel.setText(R.string.recalculate_current_month);
-        binding.itemRecalculateMonth.tvSettingValue.setText("›");
+//        binding.itemRecalculateMonth.tvSettingValue.setText("›");
         binding.itemRecalculateMonth.tvSettingDesc.setVisibility(View.GONE);
         binding.itemRecalculateMonth.getRoot().setOnClickListener(v -> showRecalculateConfirmDialog());
 
@@ -222,7 +257,7 @@ public class SettingsFragment extends Fragment {
 //                        ? String.format(Locale.getDefault(), "¥%.0f/时", preference.getHourlyRate()) : "未设置");
 //        bindP1Placeholder(binding.itemOvertimeMultiplier, "⚡", "加班倍数",
 //                String.format(Locale.getDefault(), "%.1f 倍", preference.getOvertimeMultiplier()));
-//        bindP1Placeholder(binding.itemExportJson, "💾", "导入 / 导出 JSON", "");
+        bindImportExportItem();
 //        bindP1Placeholder(binding.itemClearData, "🗑️", "清空当月数据", "");
 //
 //        // Dark Mode (P1 placeholder)
@@ -244,12 +279,50 @@ public class SettingsFragment extends Fragment {
                 .show();
     }
 
+    private void bindImportExportItem() {
+        binding.itemExportJson.tvSettingIcon.setText("💾");
+        binding.itemExportJson.tvSettingLabel.setText(R.string.import_export_json);
+        binding.itemExportJson.tvSettingValue.setText("›");
+        binding.itemExportJson.tvSettingDesc.setText(R.string.import_export_json_desc);
+        binding.itemExportJson.tvSettingDesc.setVisibility(View.VISIBLE);
+        binding.itemExportJson.getRoot().setOnClickListener(v -> showImportExportOptionsDialog());
+    }
+
+    private void showImportExportOptionsDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        DialogBackupBottomSheetBinding sheetBinding = DialogBackupBottomSheetBinding.inflate(getLayoutInflater());
+        dialog.setContentView(sheetBinding.getRoot());
+
+        sheetBinding.optionExport.setOnClickListener(v -> {
+            dialog.dismiss();
+            launchExport();
+        });
+        sheetBinding.optionImport.setOnClickListener(v -> {
+            dialog.dismiss();
+            launchImport();
+        });
+        sheetBinding.btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void launchExport() {
+        pendingExportFileName = String.format(Locale.getDefault(), "niu_ma_%1$tY-%1$tm-%1$td.json", Calendar.getInstance());
+        Toast.makeText(requireContext(), R.string.export_in_progress_toast, Toast.LENGTH_SHORT).show();
+        createDocumentLauncher.launch(pendingExportFileName);
+    }
+
+    private void launchImport() {
+        Toast.makeText(requireContext(), R.string.import_select_toast, Toast.LENGTH_SHORT).show();
+        openDocumentLauncher.launch(new String[]{"application/json"});
+    }
+
     private void bindP1Placeholder(com.toilernote.databinding.ItemSettingBinding itemBinding, String icon, String label, String value) {
         itemBinding.tvSettingIcon.setText(icon);
         itemBinding.tvSettingLabel.setText(label);
         itemBinding.tvSettingValue.setText(value + (value.isEmpty() ? "" : " ›"));
         itemBinding.tvSettingDesc.setVisibility(View.GONE);
-        itemBinding.getRoot().setAlpha(0.5f);
+//        itemBinding.getRoot().setAlpha(0.5f);
         itemBinding.getRoot().setClickable(false);
     }
 

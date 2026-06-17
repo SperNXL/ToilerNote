@@ -35,6 +35,12 @@ public interface DailyRecordDao {
     @Query("SELECT * FROM daily_records ORDER BY date DESC")
     LiveData<List<DailyRecord>> getAllRecords();
 
+    @Query("SELECT * FROM daily_records ORDER BY date DESC")
+    List<DailyRecord> getAllRecordsSync();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<DailyRecord> records);
+
     @Query("DELETE FROM daily_records WHERE date LIKE :monthPrefix || '%'")
     void deleteRecordsByMonth(String monthPrefix);
 
