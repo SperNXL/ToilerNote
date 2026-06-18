@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/backup_sheet_title"
-            android:textColor="#1E293B"
+            android:textColor="@color/text_primary"
             android:textSize="17sp"
             android:textStyle="bold" />
 
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="@string/backup_sheet_subtitle"
-            android:textColor="#64748B"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -84,7 +84,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/export_data"
-                    android:textColor="#1E293B"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -93,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="@string/export_data_desc"
-                    android:textColor="#64748B"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -102,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="›"
-                android:textColor="#94A3B8"
+                android:textColor="@color/text_tertiary"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -138,7 +138,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/import_data"
-                    android:textColor="#1E293B"
+                    android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -147,7 +147,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="@string/import_data_desc"
-                    android:textColor="#64748B"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -156,7 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="›"
-                android:textColor="#94A3B8"
+                android:textColor="@color/text_tertiary"
                 android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
@@ -179,7 +179,7 @@
         android:gravity="center"
         android:paddingVertical="14dp"
         android:text="@string/cancel"
-        android:textColor="#64748B"
+        android:textColor="@color/text_secondary"
         android:textSize="15sp"
         android:textStyle="bold" />
 
