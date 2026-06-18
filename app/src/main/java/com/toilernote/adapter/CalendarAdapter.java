@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.toilernote.R;
@@ -68,7 +69,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
 
             if (!item.isCurrentMonth) {
                 holder.tvDayNum.setBackground(null);
-                holder.tvDayNum.setTextColor(Color.parseColor("#94A3B8"));
+                holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_tertiary));
                 holder.itemView.setAlpha(0.3f);
             } else {
                 holder.itemView.setAlpha(1f);
@@ -76,7 +77,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                     String status = item.record.getStatus();
                     if ("WORK".equals(status)) {
                         applyStatusBackground(holder, workColor, item.isToday);
-                        holder.tvDayNum.setTextColor(Color.WHITE);
+                        holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_bright_status));
                         String info = TimeUtils.formatTruncatedHours(item.record.getWorkHours()) + "+"
                                 + TimeUtils.formatTruncatedHours(item.record.getOvertimeHours());
                         holder.tvDayInfo.setText(info);
@@ -87,18 +88,18 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                         }
                     } else if ("REST".equals(status)) {
                         applyStatusBackground(holder, restColor, item.isToday);
-                        holder.tvDayNum.setTextColor(Color.WHITE);
+                        holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_bright_status));
                         holder.tvDayInfo.setText("休");
                         holder.tvDayInfo.setVisibility(View.VISIBLE);
                     } else if ("LEAVE".equals(status)) {
                         if (item.record.isFullDayLeave()) {
                             applyStatusBackground(holder, leaveColor, item.isToday);
-                            holder.tvDayNum.setTextColor(Color.WHITE);
+                            holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_bright_status));
                             holder.tvDayInfo.setText("假");
                             holder.tvDayInfo.setVisibility(View.VISIBLE);
                         } else {
                             applyStatusBackground(holder, workColor, item.isToday);
-                            holder.tvDayNum.setTextColor(Color.WHITE);
+                            holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_bright_status));
                             String info = TimeUtils.formatTruncatedHours(item.record.getWorkHours()) + "+"
                                     + TimeUtils.formatTruncatedHours(item.record.getOvertimeHours());
                             holder.tvDayInfo.setText(info);
@@ -112,21 +113,21 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
                 } else if (item.isRestDay) {
                     holder.tvDayNum.setBackgroundResource(R.drawable.bg_rectangle_work);
                     holder.tvDayNum.getBackground().setTint(restColor);
-                    holder.tvDayNum.setTextColor(Color.WHITE);
+                    holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_on_bright_status));
                     holder.tvDayInfo.setText("休");
                     holder.tvDayInfo.setVisibility(View.VISIBLE);
                 } else {
                     holder.tvDayNum.setBackground(null);
-                    holder.tvDayNum.setTextColor(Color.parseColor("#1E293B"));
+                    holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_primary));
                     if (item.isToday) {
                         holder.tvDayNum.setBackgroundResource(R.drawable.bg_circle_primary_light);
-                        holder.tvDayNum.setTextColor(Color.parseColor("#6366F1"));
+                        holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.primary));
                     }
                 }
             }
         } else {
             holder.tvDayNum.setBackground(null);
-            holder.tvDayNum.setTextColor(Color.parseColor("#1E293B"));
+            holder.tvDayNum.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.text_primary));
         }
 
         holder.itemView.setOnClickListener(v -> {
@@ -151,7 +152,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.DayVie
         GradientDrawable line = new GradientDrawable();
         line.setShape(GradientDrawable.RECTANGLE);
         line.setCornerRadius(lineHeight / 2f);
-        line.setColor(Color.WHITE);
+        line.setColor(ContextCompat.getColor(context, R.color.text_on_bright_status));
         line.setSize(lineWidth, lineHeight);
 
         LayerDrawable layer = new LayerDrawable(new GradientDrawable[]{rect, line});

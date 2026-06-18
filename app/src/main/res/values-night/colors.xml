@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#818CF8</color>
+    <color name="primary_light">#312E81</color>
+    <color name="bg">#0F172A</color>
+    <color name="surface">#1E293B</color>
+    <color name="surface_elevated">#334155</color>
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
+    <color name="divider">#334155</color>
+    <color name="bg_light">#0F172A</color>
+    <color name="danger">#F87171</color>
+    <color name="success">#34D399</color>
+    <color name="warning">#FBBF24</color>
+
+    <!-- 深色模式专用：日历状态默认色（亮度提升） -->
+    <color name="default_work_color">#818CF8</color>
+    <color name="default_rest_color">#34D399</color>
+    <color name="default_leave_color">#FBBF24</color>
+    <color name="default_late_color">#F87171</color>
+
+    <!-- 深色模式专用：REST/LEAVE 色块上的文字色 -->
+    <color name="text_on_bright_status">#0F172A</color>
+
+    <!-- 深色模式专用：导入图标背景 -->
+    <color name="import_icon_bg">#064E3B</color>
+
+    <!-- 深色模式专用：预警卡片 -->
+    <color name="insight_bg">#2E1A08</color>
+    <color name="insight_border">#78350F</color>
+    <color name="insight_text">#FDBA74</color>
+
+    <!-- 深色模式专用：图表颜色 -->
+    <color name="chart_overtime">#A5B4FC</color>
+    <color name="chart_overtime_line">#34D399</color>
+</resources>

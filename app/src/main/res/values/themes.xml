@@ -5,9 +5,9 @@
         <item name="colorPrimaryContainer">@color/primary_light</item>
         <item name="colorOnPrimary">@android:color/white</item>
         <item name="colorSecondary">@color/primary</item>
-        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:statusBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">@color/surface</item>
     </style>
 
     <style name="WeekdayLabel">

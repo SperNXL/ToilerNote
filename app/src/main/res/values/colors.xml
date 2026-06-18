@@ -4,6 +4,7 @@
     <color name="primary_light">#EEF2FF</color>
     <color name="bg">#F8FAFC</color>
     <color name="surface">#FFFFFF</color>
+    <color name="surface_elevated">#F1F5F9</color>
     <color name="text_primary">#1E293B</color>
     <color name="text_secondary">#64748B</color>
     <color name="text_tertiary">#94A3B8</color>
@@ -12,4 +13,25 @@
     <color name="danger">#EF4444</color>
     <color name="success">#10B981</color>
     <color name="warning">#F59E0B</color>
+
+    <!-- 日历状态默认色 -->
+    <color name="default_work_color">#6366F1</color>
+    <color name="default_rest_color">#10B981</color>
+    <color name="default_leave_color">#F59E0B</color>
+    <color name="default_late_color">#EF4444</color>
+
+    <!-- REST/LEAVE 色块上的文字色（浅色模式用白色） -->
+    <color name="text_on_bright_status">#FFFFFF</color>
+
+    <!-- 导入图标背景 -->
+    <color name="import_icon_bg">#ECFDF5</color>
+
+    <!-- 预警卡片 -->
+    <color name="insight_bg">#FFF7ED</color>
+    <color name="insight_border">#FDBA74</color>
+    <color name="insight_text">#92400E</color>
+
+    <!-- 图表颜色 -->
+    <color name="chart_overtime">#818CF8</color>
+    <color name="chart_overtime_line">#10B981</color>
 </resources>

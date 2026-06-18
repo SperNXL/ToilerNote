@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.ToilerNote" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">#818CF8</item>
-        <item name="colorPrimaryContainer">#312E81</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-        <item name="colorSecondary">#818CF8</item>
-        <item name="android:statusBarColor">#1E293B</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryContainer">@color/primary_light</item>
+        <item name="colorOnPrimary">@color/bg</item>
+        <item name="colorSecondary">@color/primary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorSurfaceVariant">@color/surface</item>
+        <item name="colorSurfaceContainer">@color/surface</item>
+        <item name="colorSurfaceContainerLow">@color/surface</item>
+        <item name="colorSurfaceContainerLowest">@color/surface</item>
+        <item name="colorSurfaceContainerHigh">@color/surface</item>
+        <item name="colorSurfaceContainerHighest">@color/surface</item>
+        <item name="colorSurfaceBright">@color/surface</item>
+        <item name="colorSurfaceDim">@color/surface</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">#1E293B</item>
+        <item name="android:navigationBarColor">@color/surface</item>
     </style>
 </resources>

@@ -2,11 +2,14 @@ package com.toilernote.ui.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.core.content.ContextCompat;
+
+import com.toilernote.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,19 +39,20 @@ public class LineChartView extends View {
     }
 
     private void init() {
-        paintWork.setColor(Color.parseColor("#6366F1"));
+        Context ctx = getContext();
+        paintWork.setColor(ContextCompat.getColor(ctx, R.color.primary));
         paintWork.setStyle(Paint.Style.STROKE);
         paintWork.setStrokeWidth(4f);
         paintWork.setStrokeCap(Paint.Cap.ROUND);
         paintWork.setStrokeJoin(Paint.Join.ROUND);
 
-        paintOvertime.setColor(Color.parseColor("#10B981"));
+        paintOvertime.setColor(ContextCompat.getColor(ctx, R.color.chart_overtime_line));
         paintOvertime.setStyle(Paint.Style.STROKE);
         paintOvertime.setStrokeWidth(4f);
         paintOvertime.setPathEffect(new android.graphics.DashPathEffect(new float[]{10, 10}, 0));
         paintOvertime.setStrokeCap(Paint.Cap.ROUND);
 
-        paintFill.setColor(Color.parseColor("#6366F1"));
+        paintFill.setColor(ContextCompat.getColor(ctx, R.color.primary));
         paintFill.setAlpha(30);
         paintFill.setStyle(Paint.Style.FILL);
     }

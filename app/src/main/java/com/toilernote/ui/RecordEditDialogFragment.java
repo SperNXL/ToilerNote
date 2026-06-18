@@ -24,6 +24,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModelProvider;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -304,13 +305,18 @@ public class RecordEditDialogFragment extends DialogFragment {
 
     private void setStatus(String status) {
         currentStatus = status;
-        binding.tabWork.setStrokeColor(ColorStateList.valueOf(Color.parseColor("WORK".equals(status) ? "#6366F1" : "#E2E8F0")));
-        binding.tabRest.setStrokeColor(ColorStateList.valueOf(Color.parseColor("REST".equals(status) ? "#6366F1" : "#E2E8F0")));
-        binding.tabLeave.setStrokeColor(ColorStateList.valueOf(Color.parseColor("LEAVE".equals(status) ? "#6366F1" : "#E2E8F0")));
+        int primaryColor = ContextCompat.getColor(requireContext(), R.color.primary);
+        int dividerColor = ContextCompat.getColor(requireContext(), R.color.divider);
+        int primaryLightColor = ContextCompat.getColor(requireContext(), R.color.primary_light);
+        int surfaceColor = ContextCompat.getColor(requireContext(), R.color.surface);
 
-        binding.tabWork.setBackgroundColor(Color.parseColor("WORK".equals(status) ? "#EEF2FF" : "#FFFFFF"));
-        binding.tabRest.setBackgroundColor(Color.parseColor("REST".equals(status) ? "#EEF2FF" : "#FFFFFF"));
-        binding.tabLeave.setBackgroundColor(Color.parseColor("LEAVE".equals(status) ? "#EEF2FF" : "#FFFFFF"));
+        binding.tabWork.setStrokeColor(ColorStateList.valueOf("WORK".equals(status) ? primaryColor : dividerColor));
+        binding.tabRest.setStrokeColor(ColorStateList.valueOf("REST".equals(status) ? primaryColor : dividerColor));
+        binding.tabLeave.setStrokeColor(ColorStateList.valueOf("LEAVE".equals(status) ? primaryColor : dividerColor));
+
+        binding.tabWork.setBackgroundColor("WORK".equals(status) ? primaryLightColor : surfaceColor);
+        binding.tabRest.setBackgroundColor("REST".equals(status) ? primaryLightColor : surfaceColor);
+        binding.tabLeave.setBackgroundColor("LEAVE".equals(status) ? primaryLightColor : surfaceColor);
 
         if ("REST".equals(status)) {
             binding.workFormContainer.setVisibility(View.GONE);

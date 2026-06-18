@@ -52,10 +52,6 @@ public class SettingsFragment extends Fragment {
     private static final String[] COLOR_PRESETS = {
             "#FF00FF", "#1E293B", "#3B82F6", "#6366F1", "#10B981", "#F59E0B", "#EF4444", "#FACC15"
     };
-    private static final String DEFAULT_WORK_COLOR = "#6366F1";
-    private static final String DEFAULT_REST_COLOR = "#10B981";
-    private static final String DEFAULT_LEAVE_COLOR = "#F59E0B";
-    private static final String DEFAULT_LATE_COLOR = "#EF4444";
 
     private final List<View> workColorViews = new ArrayList<>();
     private final List<View> restColorViews = new ArrayList<>();
@@ -191,65 +187,72 @@ public class SettingsFragment extends Fragment {
         binding.tvWorkWeekDaysValue.setText(formatWorkDays(preference.getWorkWeekDays()) + " ›");
         binding.itemWorkWeekDays.setOnClickListener(v -> showWorkDaysPicker());
 
-        // Calendar Colors
-        bindColorRow(binding.colorRowWork, workColorViews, preference.getWorkDayColor(), DEFAULT_WORK_COLOR,
+        // Calendar Colors (read defaults from resources for dark mode support)
+        String defaultWorkColor = colorToHex(ContextCompat.getColor(requireContext(), R.color.default_work_color));
+        String defaultRestColor = colorToHex(ContextCompat.getColor(requireContext(), R.color.default_rest_color));
+        String defaultLeaveColor = colorToHex(ContextCompat.getColor(requireContext(), R.color.default_leave_color));
+        String defaultLateColor = colorToHex(ContextCompat.getColor(requireContext(), R.color.default_late_color));
+
+        bindColorRow(binding.colorRowWork, workColorViews, preference.getWorkDayColor(), defaultWorkColor,
                 color -> {
                     preference.setWorkDayColor(color);
                     viewModel.savePreference(preference);
                     refreshColorSelection(workColorViews, color);
                 });
         binding.btnResetWorkColor.setOnClickListener(v -> {
-            preference.setWorkDayColor(DEFAULT_WORK_COLOR);
+            preference.setWorkDayColor(defaultWorkColor);
             viewModel.savePreference(preference);
-            refreshColorSelection(workColorViews, DEFAULT_WORK_COLOR);
+            refreshColorSelection(workColorViews, defaultWorkColor);
             Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindColorRow(binding.colorRowRest, restColorViews, preference.getRestDayColor(), DEFAULT_REST_COLOR,
+        bindColorRow(binding.colorRowRest, restColorViews, preference.getRestDayColor(), defaultRestColor,
                 color -> {
                     preference.setRestDayColor(color);
                     viewModel.savePreference(preference);
                     refreshColorSelection(restColorViews, color);
                 });
         binding.btnResetRestColor.setOnClickListener(v -> {
-            preference.setRestDayColor(DEFAULT_REST_COLOR);
+            preference.setRestDayColor(defaultRestColor);
             viewModel.savePreference(preference);
-            refreshColorSelection(restColorViews, DEFAULT_REST_COLOR);
+            refreshColorSelection(restColorViews, defaultRestColor);
             Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindColorRow(binding.colorRowLeave, leaveColorViews, preference.getLeaveDayColor(), DEFAULT_LEAVE_COLOR,
+        bindColorRow(binding.colorRowLeave, leaveColorViews, preference.getLeaveDayColor(), defaultLeaveColor,
                 color -> {
                     preference.setLeaveDayColor(color);
                     viewModel.savePreference(preference);
                     refreshColorSelection(leaveColorViews, color);
                 });
         binding.btnResetLeaveColor.setOnClickListener(v -> {
-            preference.setLeaveDayColor(DEFAULT_LEAVE_COLOR);
+            preference.setLeaveDayColor(defaultLeaveColor);
             viewModel.savePreference(preference);
-            refreshColorSelection(leaveColorViews, DEFAULT_LEAVE_COLOR);
+            refreshColorSelection(leaveColorViews, defaultLeaveColor);
             Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
-        bindColorRow(binding.colorRowLate, lateColorViews, preference.getLateDayColor(), DEFAULT_LATE_COLOR,
+        bindColorRow(binding.colorRowLate, lateColorViews, preference.getLateDayColor(), defaultLateColor,
                 color -> {
                     preference.setLateDayColor(color);
                     viewModel.savePreference(preference);
                     refreshColorSelection(lateColorViews, color);
                 });
         binding.btnResetLateColor.setOnClickListener(v -> {
-            preference.setLateDayColor(DEFAULT_LATE_COLOR);
+            preference.setLateDayColor(defaultLateColor);
             viewModel.savePreference(preference);
-            refreshColorSelection(lateColorViews, DEFAULT_LATE_COLOR);
+            refreshColorSelection(lateColorViews, defaultLateColor);
             Toast.makeText(requireContext(), "已恢复默认", Toast.LENGTH_SHORT).show();
         });
 
         // Data Management
-        binding.itemRecalculateMonth.tvSettingIcon.setText("🔄");
-        binding.itemRecalculateMonth.tvSettingLabel.setText(R.string.recalculate_current_month);
+        // 手动重算功能暂时删除，因为每次填写都会自动重算，
+        // 目前该功能只能重算当月数据，不能用户自己选择
+//        binding.itemRecalculateMonth.tvSettingIcon.setText("🔄");
+//        binding.itemRecalculateMonth.tvSettingLabel.setText(R.string.recalculate_current_month);
 //        binding.itemRecalculateMonth.tvSettingValue.setText("›");
-        binding.itemRecalculateMonth.tvSettingDesc.setVisibility(View.GONE);
-        binding.itemRecalculateMonth.getRoot().setOnClickListener(v -> showRecalculateConfirmDialog());
+//        binding.itemRecalculateMonth.tvSettingDesc.setVisibility(View.GONE);
+//        binding.itemRecalculateMonth.getRoot().setOnClickListener(v -> showRecalculateConfirmDialog());
 
         // P1 placeholders (Data & Salary)
 //        bindP1Placeholder(binding.itemHourlyRate, "💰", "时薪设置",
@@ -524,5 +527,12 @@ public class SettingsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    /**
+     * Convert an Android color int to hex string (e.g. 0xFF6366F1 -> "#6366F1")
+     */
+    private String colorToHex(int color) {
+        return String.format("#%06X", 0xFFFFFF & color);
     }
 }

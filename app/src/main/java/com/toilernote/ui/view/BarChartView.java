@@ -2,11 +2,14 @@ package com.toilernote.ui.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
+
+import androidx.core.content.ContextCompat;
+
+import com.toilernote.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +42,13 @@ public class BarChartView extends View {
     }
 
     private void init() {
-        paintWork.setColor(Color.parseColor("#6366F1"));
-        paintOvertime.setColor(Color.parseColor("#818CF8"));
-        paintText.setColor(Color.parseColor("#94A3B8"));
+        Context ctx = getContext();
+        paintWork.setColor(ContextCompat.getColor(ctx, R.color.primary));
+        paintOvertime.setColor(ContextCompat.getColor(ctx, R.color.chart_overtime));
+        paintText.setColor(ContextCompat.getColor(ctx, R.color.text_tertiary));
         paintText.setTextSize(24f);
         paintText.setTextAlign(Paint.Align.CENTER);
-        paintAxis.setColor(Color.parseColor("#E2E8F0"));
+        paintAxis.setColor(ContextCompat.getColor(ctx, R.color.divider));
         paintAxis.setStrokeWidth(2f);
     }
 
