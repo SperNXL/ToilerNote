@@ -17,6 +17,9 @@
         <item name="elevationOverlayEnabled">false</item>
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:colorBackground">@color/bg</item>
+
+        <item name="materialTimePickerTheme">@style/ThemeOverlay.ToilerNote.TimePicker</item>
+
         <item name="android:statusBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/surface</item>

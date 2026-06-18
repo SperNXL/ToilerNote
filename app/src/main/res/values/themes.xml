@@ -5,6 +5,18 @@
         <item name="colorPrimaryContainer">@color/primary_light</item>
         <item name="colorOnPrimary">@android:color/white</item>
         <item name="colorSecondary">@color/primary</item>
+
+        <!-- 补齐 Material3 基础 token，让 MaterialTimePicker 等组件跟随应用主题 -->
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/surface_elevated</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorOutline">@color/divider</item>
+
+        <item name="materialTimePickerTheme">@style/ThemeOverlay.ToilerNote.TimePicker</item>
+
         <item name="android:statusBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">@color/surface</item>
@@ -19,6 +31,17 @@
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:padding">4dp</item>
+    </style>
+
+    <!-- TimePicker 专用主题覆盖，统一应用主色与文字/背景色 -->
+    <style name="ThemeOverlay.ToilerNote.TimePicker" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorSurfaceContainerHigh">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimaryContainer">@color/primary_light</item>
+        <item name="colorOutline">@color/divider</item>
     </style>
 
     <style name="ThemeOverlay.ToilerNote.FullScreenDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
