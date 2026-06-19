@@ -54,6 +54,11 @@ android {
     }
 }
 
+// APK 输出命名
+base {
+    archivesName = "toilernote"
+}
+
 dependencies {
     implementation libs.appcompat
     implementation libs.material
