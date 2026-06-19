@@ -487,7 +487,7 @@ public class RecordEditDialogFragment extends DialogFragment {
             }
         }
 
-        if ("LEAVE".equals(currentStatus)) {
+        if ("LEAVE".equals(currentStatus) && !binding.switchFullDayLeave.isChecked()) {
             if (isTimeEmpty(binding.etLeaveStart) || isTimeEmpty(binding.etLeaveEnd)
                     || !isValidTimeFormat(binding.etLeaveStart.getText().toString())
                     || !isValidTimeFormat(binding.etLeaveEnd.getText().toString())) {
@@ -617,8 +617,14 @@ public class RecordEditDialogFragment extends DialogFragment {
         record.setRemark(binding.etRemark.getText().toString());
 
         if ("LEAVE".equals(currentStatus)) {
-            record.setLeaveStart(binding.etLeaveStart.getText().toString());
-            record.setLeaveEnd(binding.etLeaveEnd.getText().toString());
+            if (binding.switchFullDayLeave.isChecked()) {
+                // 全天请假自动使用计划上下班时间作为请假起止时间
+                record.setLeaveStart(getEffectivePlannedStart());
+                record.setLeaveEnd(getEffectivePlannedEnd());
+            } else {
+                record.setLeaveStart(binding.etLeaveStart.getText().toString());
+                record.setLeaveEnd(binding.etLeaveEnd.getText().toString());
+            }
         } else {
             record.setLeaveStart(null);
             record.setLeaveEnd(null);
