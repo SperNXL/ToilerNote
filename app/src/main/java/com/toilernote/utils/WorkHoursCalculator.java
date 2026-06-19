@@ -54,7 +54,7 @@ public class WorkHoursCalculator {
 
         if ("LEAVE".equals(status)) {
             if (record.isFullDayLeave()) {
-                // 全天请假
+                // 全天请假：基础工时按请假扣除，但加班仍按实际下班时间计算
                 int leaveStartMin = TimeUtils.timeToMinutes(record.getLeaveStart());
                 int leaveEndMin = TimeUtils.timeToMinutes(record.getLeaveEnd());
                 int leaveDuration = Math.max(0, leaveEndMin - leaveStartMin);
@@ -62,7 +62,7 @@ public class WorkHoursCalculator {
                 int effectiveMidBreak = getEffectiveBreak(midBreak.start, midBreak.end, midBreak.duration, leaveStartMin, leaveEndMin);
                 int baseWorkMin = plannedEndMin - plannedStartMin - effectiveMidBreak - leaveDuration;
                 record.setWorkHours(Math.max(0, baseWorkMin / 60.0));
-                record.setOvertimeHours(0);
+                record.setOvertimeHours(calculateOvertimeHours(plannedEndMin, actualEndMin, nightBreak));
                 record.setLate(false);
             } else {
                 // 非全天请假：按正常上班逻辑计算，扣除请假时间段
@@ -83,12 +83,11 @@ public class WorkHoursCalculator {
 
                 if (actualWorkMin > baseWorkMin) {
                     record.setWorkHours(baseWorkMin / 60.0);
-                    int overtimeMin = actualWorkMin - baseWorkMin - nightBreak.duration;
-                    record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
                 } else {
                     record.setWorkHours(Math.max(0, actualWorkMin / 60.0));
-                    record.setOvertimeHours(0);
                 }
+                // 加班从计划下班时间后开始计算，不受请假影响
+                record.setOvertimeHours(calculateOvertimeHours(plannedEndMin, actualEndMin, nightBreak));
             }
             return;
         }
@@ -109,8 +108,7 @@ public class WorkHoursCalculator {
 
         if (actualWorkMin > baseWorkMin) {
             record.setWorkHours(baseWorkMin / 60.0);
-            int overtimeMin = actualWorkMin - baseWorkMin - nightBreak.duration;
-            record.setOvertimeHours(Math.max(0, overtimeMin / 60.0));
+            record.setOvertimeHours(calculateOvertimeHours(plannedEndMin, actualEndMin, nightBreak));
         } else {
             record.setWorkHours(Math.max(0, actualWorkMin / 60.0));
             record.setOvertimeHours(0);
@@ -206,6 +204,19 @@ public class WorkHoursCalculator {
         }
         int overlap = getBreakOverlap(breakStart, breakEnd, leaveStartMin, leaveEndMin);
         return Math.max(0, breakDuration - overlap);
+    }
+
+    /**
+     * 计算加班工时：从计划下班时间到实际下班时间，扣除与加班时段重叠的晚上休息。
+     * 请假只影响基础工时，不影响加班计算。
+     */
+    private static double calculateOvertimeHours(int plannedEndMin, int actualEndMin, BreakInfo nightBreak) {
+        if (actualEndMin <= plannedEndMin) {
+            return 0;
+        }
+        int effectiveNightBreak = getBreakOverlap(nightBreak.start, nightBreak.end, plannedEndMin, actualEndMin);
+        int overtimeMin = actualEndMin - plannedEndMin - effectiveNightBreak;
+        return Math.max(0, overtimeMin / 60.0);
     }
 
     public static class BreakInfo {
