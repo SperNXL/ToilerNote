@@ -400,6 +400,10 @@
                         android:id="@+id/tvWorkWeekDaysValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:maxWidth="160dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="周一至周五 ›"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />

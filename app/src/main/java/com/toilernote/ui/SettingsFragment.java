@@ -437,23 +437,40 @@ public class SettingsFragment extends Fragment {
     private String formatWorkDays(String workWeekDays) {
         Set<Integer> days = parseWorkDays(workWeekDays);
         String[] labels = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
-        if (days.size() == 5 && days.contains(1) && days.contains(2) && days.contains(3) && days.contains(4) && days.contains(5)) {
-            return "周一至周五";
-        }
         if (days.size() == 7) {
             return "每天";
+        }
+        if (days.isEmpty()) {
+            return "未设置";
         }
         if (days.size() == 2 && days.contains(6) && days.contains(0)) {
             return "周末";
         }
-        StringBuilder sb = new StringBuilder();
+
+        // 合并连续的工作日区间
+        List<int[]> ranges = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             if (days.contains(i)) {
-                if (sb.length() > 0) sb.append("、");
-                sb.append(labels[i]);
+                int start = i;
+                while (i + 1 < 7 && days.contains(i + 1)) {
+                    i++;
+                }
+                ranges.add(new int[]{start, i});
             }
         }
-        return sb.length() > 0 ? sb.toString() : "未设置";
+
+        StringBuilder sb = new StringBuilder();
+        for (int[] range : ranges) {
+            if (sb.length() > 0) sb.append("、");
+            if (range[0] == range[1]) {
+                sb.append(labels[range[0]]);
+            } else if (range[1] - range[0] >= 2) {
+                sb.append(labels[range[0]]).append("至").append(labels[range[1]]);
+            } else {
+                sb.append(labels[range[0]]).append("、").append(labels[range[1]]);
+            }
+        }
+        return sb.toString();
     }
 
     private void bindColorRow(LinearLayout container, List<View> colorViews, String currentColor, String defaultColor, Consumer<String> onSelect) {
