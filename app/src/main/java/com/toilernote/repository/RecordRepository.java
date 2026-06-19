@@ -15,11 +15,12 @@ import java.util.List;
 
 public class RecordRepository {
 
+    private final AppDatabase db;
     private final DailyRecordDao dailyRecordDao;
     private final UserPreferenceDao userPreferenceDao;
 
     public RecordRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
+        this.db = AppDatabase.getInstance(context);
         this.dailyRecordDao = db.dailyRecordDao();
         this.userPreferenceDao = db.userPreferenceDao();
     }
@@ -67,6 +68,18 @@ public class RecordRepository {
 
     public void deleteAllRecordsSync() {
         dailyRecordDao.deleteAll();
+    }
+
+    /**
+     * 原子化导入数据：先插入偏好设置，再删除全部记录，最后插入新记录。
+     * 三步操作在同一个数据库事务中执行，任何一步失败都会回滚，避免数据丢失。
+     */
+    public void importDataSync(UserPreference preference, List<DailyRecord> records) {
+        db.runInTransaction(() -> {
+            userPreferenceDao.insert(preference);
+            dailyRecordDao.deleteAll();
+            dailyRecordDao.insertAll(records);
+        });
     }
 
     public void deleteRecordsByMonth(String monthPrefix) {

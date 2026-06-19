@@ -135,9 +135,7 @@ public class SettingsViewModel extends AndroidViewModel {
                     }
                 }
 
-                repository.deleteAllRecordsSync();
-                repository.insertPreferenceSync(pref);
-                repository.insertAllRecordsSync(records);
+                repository.importDataSync(pref, records);
                 success = true;
             } catch (Exception e) {
                 handleImportError(e, uri != null ? uri.toString() : "");
