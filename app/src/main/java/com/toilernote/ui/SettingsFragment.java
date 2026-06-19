@@ -1,6 +1,5 @@
 package com.toilernote.ui;
 
-import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -25,6 +24,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.toilernote.R;
@@ -270,16 +270,16 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showRecalculateConfirmDialog() {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.recalculate_current_month)
                 .setMessage(R.string.recalculate_confirm)
-                .setPositiveButton("确定", (dialog, which) -> {
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
                     Toast.makeText(requireContext(), R.string.recalculate_in_progress, Toast.LENGTH_SHORT).show();
                     viewModel.recalculateCurrentMonth(() ->
                             requireActivity().runOnUiThread(() ->
                                     Toast.makeText(requireContext(), R.string.recalculate_complete, Toast.LENGTH_SHORT).show()));
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
@@ -383,10 +383,10 @@ public class SettingsFragment extends Fragment {
             if (day >= 0 && day < 7) checked[day] = true;
         }
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("默认工作日")
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.default_work_days)
                 .setMultiChoiceItems(dayLabels, checked, (dialog, which, isChecked) -> checked[which] = isChecked)
-                .setPositiveButton("确定", (dialog, which) -> {
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
                     List<String> selected = new ArrayList<>();
                     for (int i = 0; i < 7; i++) {
                         if (checked[i]) selected.add(String.valueOf(i));
@@ -394,20 +394,20 @@ public class SettingsFragment extends Fragment {
                     String value = selected.isEmpty() ? "1,2,3,4,5" : String.join(",", selected);
 
                     // Confirm before applying
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("确认修改")
-                            .setMessage("新的工作日设置将从明天起生效，历史记录不受影响。是否保存？")
-                            .setPositiveButton("保存", (d, w) -> {
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.confirm_modify)
+                            .setMessage(R.string.work_days_change_message)
+                            .setPositiveButton(R.string.save, (d, w) -> {
                                 preference.setWorkWeekDays(value);
                                 preference.setWorkDaysEffectiveDate(getTomorrowDate());
                                 binding.tvWorkWeekDaysValue.setText(formatWorkDays(value) + " ›");
                                 viewModel.savePreference(preference);
-                                Toast.makeText(requireContext(), "已保存，明日生效", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(requireContext(), R.string.saved_tomorrow_effective, Toast.LENGTH_SHORT).show();
                             })
-                            .setNegativeButton("取消", null)
+                            .setNegativeButton(R.string.cancel, null)
                             .show();
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 

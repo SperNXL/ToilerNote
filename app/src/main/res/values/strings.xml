@@ -78,4 +78,9 @@
     <string name="dark_mode">🌙 深色模式</string>
     <string name="data_insight">数据洞察与趋势分析</string>
     <string name="preference_data">偏好与数据管理</string>
+    <string name="default_work_days">默认工作日</string>
+    <string name="confirm_modify">确认修改</string>
+    <string name="work_days_change_message">新的工作日设置将从明天起生效，历史记录不受影响。是否保存？</string>
+    <string name="saved_tomorrow_effective">已保存，明日生效</string>
+    <string name="ok">确定</string>
 </resources>
