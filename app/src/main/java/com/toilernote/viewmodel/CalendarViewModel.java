@@ -12,6 +12,7 @@ import com.toilernote.database.AppDatabase;
 import com.toilernote.entity.DailyRecord;
 import com.toilernote.entity.UserPreference;
 import com.toilernote.model.MonthStatistics;
+import com.toilernote.repository.RecordRepository;
 import com.toilernote.utils.TimeUtils;
 import com.toilernote.utils.WorkHoursCalculator;
 
@@ -20,6 +21,7 @@ import java.util.List;
 
 public class CalendarViewModel extends AndroidViewModel {
 
+    private final RecordRepository repository;
     private final Calendar currentMonth;
     private final MutableLiveData<Calendar> monthLiveData;
     private final LiveData<List<DailyRecord>> monthlyRecords;
@@ -28,6 +30,7 @@ public class CalendarViewModel extends AndroidViewModel {
 
     public CalendarViewModel(@NonNull Application application) {
         super(application);
+        repository = new RecordRepository(application);
         currentMonth = Calendar.getInstance();
         monthLiveData = new MutableLiveData<>();
         monthLiveData.setValue(currentMonth);
@@ -68,7 +71,7 @@ public class CalendarViewModel extends AndroidViewModel {
     }
 
     public void saveRecord(DailyRecord record) {
-        AppDatabase.getInstance(getApplication()).dailyRecordDao().insert(record);
+        repository.insertRecord(record);
     }
 
     public void calculateStatistics(List<DailyRecord> records, UserPreference pref) {
