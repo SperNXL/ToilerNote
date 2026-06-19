@@ -124,6 +124,7 @@ public class RecordEditDialogFragment extends DialogFragment {
             if (!isChecked) {
                 resetPlannedTimeToDefaults();
             }
+            updatePlannedTimeSummary();
             updateBreakSummary(true);
             updateBreakSummary(false);
         });
@@ -164,6 +165,7 @@ public class RecordEditDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
+                updatePlannedTimeSummary();
                 updateBreakSummary(true);
                 updateBreakSummary(false);
             }
@@ -253,6 +255,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.etPlannedStart.setText(preference.getDefaultWorkStart());
         binding.etPlannedEnd.setText(preference.getDefaultWorkEnd());
         updatePlannedTimeVisibility(false);
+        updatePlannedTimeSummary();
         binding.etActualStart.setText(preference.getDefaultWorkStart());
         binding.etActualEnd.setText(preference.getDefaultWorkEnd());
         binding.switchCustomMidBreak.setChecked(false);
@@ -274,6 +277,7 @@ public class RecordEditDialogFragment extends DialogFragment {
         binding.etPlannedEnd.setText(customPlanned && record.getPlannedEnd() != null
                 ? record.getPlannedEnd() : preference.getDefaultWorkEnd());
         updatePlannedTimeVisibility(customPlanned);
+        updatePlannedTimeSummary();
         binding.etActualStart.setText(record.getActualStart() != null ? record.getActualStart() : preference.getDefaultWorkStart());
         binding.etActualEnd.setText(record.getActualEnd() != null ? record.getActualEnd() : preference.getDefaultWorkEnd());
         boolean customMidBreak = shouldUseCustomMidBreak(record);
@@ -347,6 +351,23 @@ public class RecordEditDialogFragment extends DialogFragment {
     private void updatePlannedTimeVisibility(boolean showCustom) {
         binding.tilPlannedStart.setVisibility(showCustom ? View.VISIBLE : View.GONE);
         binding.tilPlannedEnd.setVisibility(showCustom ? View.VISIBLE : View.GONE);
+    }
+
+    private void updatePlannedTimeSummary() {
+        if (preference == null) return;
+        if (binding.switchCustomPlannedTime.isChecked()) {
+            binding.tvPlannedTimeSummary.setVisibility(View.GONE);
+            return;
+        }
+        String start = preference.getDefaultWorkStart();
+        String end = preference.getDefaultWorkEnd();
+        if (start == null || end == null) {
+            binding.tvPlannedTimeSummary.setVisibility(View.GONE);
+            return;
+        }
+        String range = start + "-" + end;
+        binding.tvPlannedTimeSummary.setText(getString(R.string.planned_time_summary, range));
+        binding.tvPlannedTimeSummary.setVisibility(View.VISIBLE);
     }
 
     private void resetPlannedTimeToDefaults() {
