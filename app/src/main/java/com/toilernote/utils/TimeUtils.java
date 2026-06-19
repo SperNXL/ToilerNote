@@ -7,8 +7,7 @@ import java.util.Locale;
 
 public class TimeUtils {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private static final SimpleDateFormat MONTH_FORMAT = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+    private static final String DATE_PATTERN = "yyyy-MM-dd";
 
     public static int timeToMinutes(String time) {
         if (time == null || !time.contains(":")) return 0;
@@ -53,7 +52,8 @@ public class TimeUtils {
 
     public static int getDayOfWeek(String dateStr) {
         try {
-            Date date = DATE_FORMAT.parse(dateStr);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN, Locale.getDefault());
+            Date date = dateFormat.parse(dateStr);
             Calendar cal = Calendar.getInstance();
             cal.setTime(date);
             return cal.get(Calendar.DAY_OF_WEEK) - 1;
@@ -83,11 +83,12 @@ public class TimeUtils {
 
     public static String getYesterday(String dateStr) {
         try {
-            Date date = DATE_FORMAT.parse(dateStr);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN, Locale.getDefault());
+            Date date = dateFormat.parse(dateStr);
             Calendar cal = Calendar.getInstance();
             cal.setTime(date);
             cal.add(Calendar.DAY_OF_MONTH, -1);
-            return DATE_FORMAT.format(cal.getTime());
+            return dateFormat.format(cal.getTime());
         } catch (Exception e) {
             return null;
         }
