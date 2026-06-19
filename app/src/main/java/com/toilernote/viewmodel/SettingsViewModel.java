@@ -2,9 +2,11 @@ package com.toilernote.viewmodel;
 
 import android.app.Application;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -147,12 +149,19 @@ public class SettingsViewModel extends AndroidViewModel {
         }).start();
     }
 
-    private boolean isFileTooLarge(Uri uri) throws IOException {
-        try (InputStream is = getApplication().getContentResolver().openInputStream(uri)) {
-            if (is == null) return true;
-            long available = is.available();
-            return available > 10 * 1024 * 1024L;
+    private boolean isFileTooLarge(Uri uri) {
+        try (Cursor cursor = getApplication().getContentResolver().query(
+                uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                if (sizeIndex >= 0) {
+                    long size = cursor.getLong(sizeIndex);
+                    return size > 10 * 1024 * 1024L;
+                }
+            }
         }
+        // 无法获取大小时按安全侧处理：认为不大，后续读流时若真超大再自然失败
+        return false;
     }
 
     private void handleImportError(Throwable e, String uriStr) {
